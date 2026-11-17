@@ -129,3 +129,6 @@ taramalar/
 .claude/skills/job-scraper/job_scraper/*.py
 .claude/skills/job-scraper/job_scraper/kisi_*/
 .claude/governance/
+
+# Yerel arşiv (silinmeyen eski dosyalar) - depoya girmez
+_archive/

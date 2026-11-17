@@ -14,8 +14,7 @@ Bu klon, `MadsLorentzen/ai-job-search` çatısına altı Türkiye kaynağı ekle
 | `vacanciesinturkey-search` | vacanciesinturkey.com | İngilizce ilanlar: özel sektör, BM, STK, elçilik | WP Job Manager arama ucu + ilan sayfası JSON-LD; Türkiye süzgeci ilan metnine bakar |
 | `linkedin-search` | linkedin.com | Ülke bağımsız; kod değişmedi | `-l "Türkiye"`, `-l "Ankara, Türkiye"` |
 
-Danimarka portalları (`jobindex`, `jobnet`, `jobbank`, `jobdanmark`) yukarı akışta zaten `enabled: false` gelir. Onlara dokunulmadı.
-Ülke bağımsız `freehire-search` ise `enabled: true` gelir; `/scrape` onu da çalıştırır. Kapatmak için SKILL.md dosyasında `enabled: false` yapın.
+Kapsam yalnız Türkiye: Danimarka portalları (`jobindex`, `jobnet`, `jobbank`, `jobdanmark`) ve ülke bağımsız `freehire-search` depodan çıkarıldı (2026-11-17); yerel kopyaları `_archive/` altında, depoya girmez.
 
 ## İzin satırları (isteğe bağlı)
 

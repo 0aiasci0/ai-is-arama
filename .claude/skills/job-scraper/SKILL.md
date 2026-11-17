@@ -30,7 +30,7 @@ The user triggers this skill by saying things like:
 Optional arguments:
 - A focus area, e.g. "/scrape data science" or "/scrape geophysics"
 - "broad" to run all search categories, e.g. "/scrape broad"
-- "health" to run the portal health check only (Step 4.75), without searching, deduplicating, or presenting jobs - e.g. "/scrape health", or "/scrape health jobnet" to probe one portal even if disabled
+- "health" to run the portal health check only (Step 4.75), without searching, deduplicating, or presenting jobs - e.g. "/scrape health", or "/scrape health kariyernet" to probe one portal even if disabled
 
 ---
 
@@ -162,7 +162,7 @@ It prints one line: the canonical key for that posting. The key must be a pure f
       "deadline": "YYYY-MM-DD" | null,
       "fit": "high/medium/low",
       "status": "new/skipped/ranked/expired/unreachable",
-      "portal": "<source portal skill, e.g. jobindex-search>",
+      "portal": "<source portal skill, e.g. kariyernet-search>",
       "source": "cli/websearch"
     }
   }

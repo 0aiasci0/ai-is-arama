@@ -192,10 +192,10 @@ class ApplyHostVerificationSpecTests(unittest.TestCase):
         # A regional subdomain and the bare apex must both pass for every portal;
         # the derived set is what makes this hold for a portal added by /add-portal.
         urls = [
-            "https://www.jobindex.dk/jobannonce/12345",
-            "https://dk.linkedin.com/jobs/view/999999",
-            "https://jobnet.dk/find-job/8888",
-            "https://freehire.me/jobs/golang-zensar-2bxu6dxm",
+            "https://www.kariyer.net/is-ilani/ornek-ekonomist-4574710",
+            "https://tr.linkedin.com/jobs/view/999999",
+            "https://vacanciesinturkey.com/job/un-women-finance-analyst-istanbul-turkiye-p2-fta-international/",
+            "https://kariyerkapisi.gov.tr/IlanDetay?i=4850e095-8b16-4aba-9956-555740a41146",
         ]
         for url in urls:
             tier, host = classify_posting_host(url)

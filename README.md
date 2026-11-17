@@ -18,8 +18,7 @@ Bu uyarlama yalnız ilan kaynaklarını değiştirir. Çekirdek akış (`/setup`
 | `vacanciesinturkey-search` | vacanciesinturkey.com | İngilizce ilanlar: özel sektör, BM kuruluşları, STK, elçilik | WP Job Manager arama ucu + her ilanın sayfası (JSON-LD); Türkiye süzgeci ilan metnine bakar |
 | `linkedin-search` | linkedin.com | Özgün projeden; kod değişmedi | `-l "Türkiye"`, `-l "Ankara, Türkiye"` |
 
-Danimarka portalları (`jobindex`, `jobnet`, `jobbank`, `jobdanmark`) özgün projede kapalı gelir (`enabled: false`).
-Ülke bağımsız `freehire-search` açık gelir. Kapatmak için SKILL.md dosyasında `enabled: false` yazın.
+Kapsam yalnız Türkiye: özgün projenin Danimarka portalları ve ülke bağımsız `freehire-search` bu depodan çıkarıldı (2026-11-17).
 
 Toplu tarama betikleri `tools/` klasöründedir:
 
