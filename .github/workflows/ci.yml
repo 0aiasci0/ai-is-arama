@@ -27,7 +27,7 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [master, main]  # main: Türkiye uyarlamasının varsayılan dalı
   pull_request:
   workflow_dispatch:
 
