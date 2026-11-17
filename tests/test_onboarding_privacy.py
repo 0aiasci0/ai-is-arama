@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-README = REPO / "README.md"
+README = REPO / "README_EN.md"
 SETUP_GUIDE = REPO / "SETUP.md"
 SETUP_COMMAND = REPO / ".claude" / "commands" / "setup.md"
 

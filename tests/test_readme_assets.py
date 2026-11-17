@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
-README = REPO / "README.md"
+README = REPO / "README_EN.md"
 
 IMG_SRC = re.compile(r'<img[^>]+src="([^"]+)"')
 MD_IMG = re.compile(r"!\[[^\]]*\]\(([^)\s]+)")
