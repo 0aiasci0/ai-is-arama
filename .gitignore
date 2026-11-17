@@ -132,3 +132,6 @@ taramalar/
 
 # Yerel arşiv (silinmeyen eski dosyalar) - depoya girmez
 _archive/
+
+# Kişi profilleri (CV metni, meslekler, terimler) - kişisel veri, depoya girmez
+profiller/

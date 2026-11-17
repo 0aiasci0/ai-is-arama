@@ -4,7 +4,8 @@ Kullanım:
   python tools/tr_yeni.py <tarama_klasoru> [--degerlendirme <deger.json> ...] [--onceki-tarama <klasor>]
                           [--kaynak ilanlar_ilgili.csv] [--cikti ilanlar_degerlendirilecek.csv]
 
-Varsayılan: <kaynak> satırlarından, --degerlendirme dosyalarının (varsayılan: taramalar/*/deger*.json)
+Varsayılan: <kaynak> satırlarından, --degerlendirme dosyalarının (varsayılan: tarama klasörünün kardeşleri,
+yani aynı kişinin taramaları: taramalar/<kişi>/*/deger*.json)
 herhangi birinde anahtarı olanları çıkarır. Anahtar "<portal>|<id>"; eski kısa portal kodları
 (li, knet, kk, iskur, rg) uzun ada çevrilir.
 --onceki-tarama verilirse eski davranış da uygulanır: o klasörün ilanlar.csv dosyasında görülen ilanlar da çıkar
@@ -49,7 +50,10 @@ def main(argv=None):
     ap.add_argument("--cikti", default="ilanlar_degerlendirilecek.csv")
     a = ap.parse_args(argv)
 
-    dosyalar = a.degerlendirme if a.degerlendirme is not None else sorted(glob.glob(os.path.join(KOK, "taramalar", "*", "deger*.json")))
+    # Varsayılan: aynı kişinin taramaları = tarama klasörünün kardeşleri (taramalar/<kişi>/*/deger*.json).
+    # Başka kişinin değerlendirmesi kuyruğu etkilemez.
+    ust = os.path.dirname(os.path.abspath(a.klasor))
+    dosyalar = a.degerlendirme if a.degerlendirme is not None else sorted(glob.glob(os.path.join(ust, "*", "deger*.json")))
     gorulen = degerlendirilmis(dosyalar)
     onceki = set()
     if a.onceki_tarama:

@@ -1,7 +1,8 @@
-"""ilanlar.csv -> başlıkta rol kökü geçen ve konumu Ankara/İstanbul (veya yalnız 'Türkiye') olan ilanlar.
-Kullanım: python tools/tr_baslik_suzgec.py <klasor> [--kural config/tr_suzgec.json]
+"""ilanlar.csv -> başlıkta rol kökü geçen ve konumu aranan illerde (varsayılan Ankara/İstanbul; ya da yalnız 'Türkiye') olan ilanlar.
+Kullanım: python tools/tr_baslik_suzgec.py <klasor> [--profil profiller/<kişi>] [--kural config/tr_suzgec.json]
 Çıktı: ilanlar_ilgili.csv, ilanlar_ilgili.md; serbest iş platformu ilanları ilanlar_serbest.csv
-Kurallar (rol kökleri, dışlama, serbest platform adları) config/tr_suzgec.json dosyasındadır.
+Dışlama ve serbest platform kuralları config/tr_suzgec.json dosyasındadır; rol kökleri ve iller --profil verilirse
+profilden (rol_kokleri.txt, iller.txt), verilmezse config'ten (ekonomi/araştırma/veri örnek profili).
 """
 import argparse
 import csv
@@ -13,7 +14,6 @@ from collections import Counter
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 VARSAYILAN_KURAL = os.path.join(KOK, "config", "tr_suzgec.json")
 
-IL = re.compile(r"ankara|[iİı]stanbul", re.I)
 GENEL = re.compile(r"^\s*(Türkiye|TÜRKİYE|Turkey)(\s+(Geneli|GENELİ))?\s*$", re.I)
 # Kariyer Kapısı satırları ilan metnindeki bölüm şartıyla (iktisat, istatistik…) eşleşti; kamu
 # ilan başlığında rol adı geçmez. Bu portalda rol kökü aranmaz.
@@ -24,16 +24,42 @@ METINDEN_ESLESEN = {"Kariyer Kapısı"}
 MERKEZ = re.compile(r"(^|,)\s*((BAKANLIK\s+)?MERKEZ\s+TEŞKİLATI|MERKEZ\s*/)")
 
 
-def kural_oku(yol):
-    k = json.load(open(yol, encoding="utf-8"))
+def satirlar(yol):
+    with open(yol, encoding="utf-8") as fh:
+        return [s.strip() for s in fh if s.strip() and not s.lstrip().startswith("#")]
+
+
+def kural_oku(yol, profil=None):
+    """Kurallar config'ten; profil verilirse rol kökleri profilin rol_kokleri.txt dosyasından."""
+    with open(yol, encoding="utf-8") as fh:
+        k = json.load(fh)
     birlestir = lambda liste: re.compile("|".join(liste), re.I)
-    return birlestir(k["rol_kokleri"]), birlestir(k["dislama"]), birlestir(k["serbest_platform"])
+    kokler = satirlar(os.path.join(profil, "rol_kokleri.txt")) if profil else k["rol_kokleri"]
+    if not kokler:
+        raise SystemExit("HATA: rol kökü listesi boş")
+    return birlestir(kokler), birlestir(k["dislama"]), birlestir(k["serbest_platform"])
+
+
+def fold(s):
+    return (s or "").replace("İ", "i").replace("I", "ı").lower().translate(str.maketrans("ıışğüöç", "iisguoc"))
+
+
+def il_eslestirici(iller):
+    """İl listesinden (ör. ['Ankara', 'İstanbul']) harf katlamalı eşleştirici ve sınıf adı."""
+    kaliplar = [re.compile(rf"(^|[^a-z]){re.escape(fold(il))}([^a-z]|$)") for il in iller]
+    ad = "/".join(iller)
+    return (lambda konum: any(k.search(fold(konum)) for k in kaliplar)), ad
+
+
+VARSAYILAN_ILLER = ["Ankara", "İstanbul"]
+IL_ESLES, IL_SINIF = il_eslestirici(VARSAYILAN_ILLER)
+MERKEZ_ANKARA = True  # merkez teşkilatı sınıfı yalnız il listesinde Ankara varsa
 
 
 def konum_sinifi(r):
-    if IL.search(r["konum"]):
-        return "Ankara/İstanbul"
-    if r["portal"] in METINDEN_ESLESEN and MERKEZ.search(r["konum"]):
+    if IL_ESLES(r["konum"]):
+        return IL_SINIF
+    if MERKEZ_ANKARA and r["portal"] in METINDEN_ESLESEN and MERKEZ.search(r["konum"]):
         return "Ankara (merkez teşkilatı)"
     if GENEL.match(r["konum"]) or not r["konum"]:
         return "Türkiye geneli/uzaktan"
@@ -48,8 +74,16 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("klasor")
     ap.add_argument("--kural", default=VARSAYILAN_KURAL)
+    ap.add_argument("--profil", help="profiller/<kişi>: rol_kokleri.txt ve iller.txt buradan okunur")
     a = ap.parse_args(argv)
-    rol, dislama, serbest = kural_oku(a.kural)
+    rol, dislama, serbest = kural_oku(a.kural, a.profil)
+    if a.profil:
+        global IL_ESLES, IL_SINIF, MERKEZ_ANKARA
+        iller = satirlar(os.path.join(a.profil, "iller.txt"))
+        if not iller:
+            raise SystemExit("HATA: profilin iller.txt dosyası boş")
+        IL_ESLES, IL_SINIF = il_eslestirici(iller)
+        MERKEZ_ANKARA = any(fold(i) == "ankara" for i in iller)
 
     with open(os.path.join(a.klasor, "ilanlar.csv"), encoding="utf-8-sig") as fh:
         okuyucu = csv.DictReader(fh)

@@ -19,7 +19,7 @@ import sys
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CLI = os.path.join(KOK, ".agents", "skills", "resmigazete-akademik-search", "cli", "src", "cli.ts")
 ALAN = re.compile(r"iktisat|ekonomi|ekonometri|istatistik|veri bilim|veri anali|data scien|finans", re.I)
-IL = {"Ankara": re.compile(r"ankara", re.I), "İstanbul": re.compile(r"[iİı]stanbul", re.I)}
+ILLER_DOSYASI = os.path.join(KOK, "config", "tr_iller.txt")
 # Katlanmış (küçük harf, Türkçe i) metinde: "son başvuru tarihi: 02.12.2026" ve benzerleri
 SON_BASVURU = re.compile(r"son\s+basvuru\s+tarihi\s*[:\-]?\s*(\d{1,2})[./](\d{1,2})[./](\d{4})")
 
@@ -27,6 +27,18 @@ SON_BASVURU = re.compile(r"son\s+basvuru\s+tarihi\s*[:\-]?\s*(\d{1,2})[./](\d{1,
 def fold(s):
     return (s.replace("İ", "i").replace("I", "ı").lower()
             .translate(str.maketrans("ıışğüöç", "iisguoc")))
+
+
+def il_kaliplari(yol=ILLER_DOSYASI):
+    """81 il: katlanmış metinde sözcük sınırlı arama (ek alabilir: "Ankara'da")."""
+    with open(yol, encoding="utf-8") as fh:
+        iller = [s.strip() for s in fh if s.strip() and not s.startswith("#")]
+    return {il: re.compile(rf"(?<![a-z]){re.escape(fold(il))}(?![a-z])") for il in iller}
+
+
+def iller_bul(metin, kaliplar):
+    f = fold(metin)
+    return [il for il, p in kaliplar.items() if p.search(f)]
 
 
 def son_basvuru(metin):
@@ -44,6 +56,7 @@ def main(argv=None):
     ap.add_argument("--onbellek", action="store_true", help="ağa çıkma; yalnız önbellek")
     a = ap.parse_args(argv)
     bun = shlex.split(os.environ.get("BUN", "bun"))
+    kaliplar = il_kaliplari()
 
     ilanlar = []
     for f in sorted(glob.glob(os.path.join(a.klasor, "ham", "rg__universite__peek__p*.json"))):
@@ -76,7 +89,7 @@ def main(argv=None):
             os.replace(yol + ".part", yol)
         d = json.load(open(yol, encoding="utf-8"))
         metin = d.get("description") or ""
-        iller = [k for k, r in IL.items() if r.search(x["company"] + " " + metin)]
+        iller = iller_bul(x["company"] + " " + metin, kaliplar)
         alanlar = sorted({m.group(0).lower() for m in ALAN.finditer(metin)})
         sonuc.append({"id": x["id"], "tarih": x["date"], "kurum": x["company"], "baslik": x["title"],
                       "academic": x["academic"], "taranmis": d.get("scanned"), "iller": iller,

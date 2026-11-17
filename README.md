@@ -31,6 +31,16 @@ Toplu tarama betikleri `tools/` klasöründedir:
 | `cv_oku.py` | CV'den metin çıkarır: `.pdf` ve `.docx` (tablo, metin kutusu, üst/alt bilgi dahil) |
 | `tr_excel.py` | CV uyum tablosunu Excel'e yazar ve bitince dosyayı açar |
 
+## Yeni bir CV için (herhangi bir kişi)
+
+Claude Code içinde: `/tr-cv <kişi-adı> <cv.pdf|cv.docx>`. Komut şu adımları yürütür:
+1. `tools/tr_profil.py yeni` CV metnini `profiller/<kişi>/cv.md` dosyasına çıkarır.
+2. Claude CV'den meslekleri, arama terimlerini ve süzgeç köklerini önerir; **iller kullanıcıya sorulur** (81 il, `config/tr_iller.txt`). Kullanıcı onaylayınca `profiller/<kişi>/` dosyalarına yazılır ve `tr_profil.py onayla` koşar.
+3. Tarama `PROFIL=profiller/<kişi>` ile `taramalar/<kişi>/<tarih>/` altına yapılır; onaysız ya da onaydan sonra değişmiş profille tarama durur.
+4. Süzgeç (`--profil`), kuyruk, ilan metni, değerlendirme ve Excel (`cv_uyum_<kişi>_<tarih>.xlsx`) o kişiye göre çalışır. Bir kişinin değerlendirmesi başka bir kişinin kuyruğunu etkilemez.
+
+`profiller/` ve `taramalar/` kişisel veridir; `.gitignore` ile depoya girmez. Profil verilmezse `config/` altındaki örnek (ekonomi/araştırma/veri; Ankara, İstanbul) kullanılır.
+
 ## CV uyum akışı
 
 Komutlar depo kökünden koşulur; `K=taramalar/<tarih>` tarama klasörüdür. Her adımın çıktısı bir sonrakinin girdisidir.

@@ -12,11 +12,21 @@ import re
 
 KOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 ALAN = re.compile(r"iktisat|ekonomi|ekonometri|istatistik|veri bilim|veri anali|data scien|finans", re.I)
-AD_IL = {"Ankara": re.compile(r"^Ankara\b"), "İstanbul": re.compile(r"^(İstanbul|Istanbul)\b")}
+ILLER_DOSYASI = os.path.join(KOK, "config", "tr_iller.txt")
+
+
+def ad_kaliplari(yol=ILLER_DOSYASI):
+    """Kurum adı il adıyla başlıyorsa o il (ör. 'İzmir Demokrasi Üniversitesi'). 81 il config/tr_iller.txt."""
+    with open(yol, encoding="utf-8") as fh:
+        iller = [s.strip() for s in fh if s.strip() and not s.startswith("#")]
+    return {il: re.compile(rf"^{re.escape(il)}(?![a-zçğıöşü])") for il in iller}
+
+
+AD_IL = ad_kaliplari()
 
 
 def il_bul(r, tablo):
-    kurum = r["kurum"]
+    kurum = r["kurum"].replace("Istanbul", "İstanbul")
     for anahtar, il in tablo.items():
         if kurum.startswith(anahtar):
             return il, "tablo"

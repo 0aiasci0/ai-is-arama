@@ -13,7 +13,7 @@ Girdiler (tarama klasöründe):
   detay/<kod>_<id>.txt  ilan metni (tr_detay_cek.py); son başvuru tarihi buradan da okunur
   Son başvuru önceliği: kaynak CSV "son_basvuru" sütunu / rg_akademik.json "son_basvuru" > detay metni
 deger.json: {"<portal>|<id>": ["Güçlü|Orta|Zayıf|Elendi", "şart özeti", "yorum"], "_not": "..."}
-Çıktı varsayılanı: <tarama_klasoru>/cv_uyum_<YYYY-MM-DD>.xlsx. Dosya açık ve kilitliyse saat ekli ad kullanılır.
+Çıktı varsayılanı: <tarama_klasoru>/cv_uyum_<YYYY-MM-DD>.xlsx (taramalar/<kişi>/<tarih>/ düzeninde cv_uyum_<kişi>_<YYYY-MM-DD>.xlsx). Dosya açık ve kilitliyse saat ekli ad kullanılır.
 """
 import argparse
 import csv
@@ -198,7 +198,10 @@ def main(argv=None):
     tamamla(a.klasor, kayit, son, deger)
     df_deg, df_tum = tablolar(kayit, son, deger)
 
-    cikti = a.cikti or os.path.join(a.klasor, f"cv_uyum_{dt.date.today().isoformat()}.xlsx")
+    # taramalar/<kişi>/<tarih>/ düzeninde dosya adına kişi girer: cv_uyum_<kişi>_<tarih>.xlsx
+    ust = os.path.basename(os.path.dirname(os.path.abspath(a.klasor)))
+    kisi = "" if ust == "taramalar" else f"{ust}_"
+    cikti = a.cikti or os.path.join(a.klasor, f"cv_uyum_{kisi}{dt.date.today().isoformat()}.xlsx")
     if kilitli_mi(cikti):
         kok, uz = os.path.splitext(cikti)
         yeni = f"{kok}_{dt.datetime.now():%H%M%S}{uz}"

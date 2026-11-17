@@ -347,6 +347,129 @@ class Tarama(unittest.TestCase):
         self.assertIn("blocked=1", log)
 
 
+def profil_kur(kok, kisi="ayse_yilmaz", iller="Ankara\n"):
+    """Sentetik İK CV'siyle profil kurar ve onaylar; profil klasörünü döndürür."""
+    import docx
+    cv = os.path.join(kok, "cv.docx")
+    belge = docx.Document()
+    belge.add_heading("Deneyim", level=1)
+    belge.add_paragraph("İnsan kaynakları uzmanı; işe alım, bordro ve idari işler. " + "metin " * 60)
+    belge.save(cv)
+    env = {"TR_PROFILLER": os.path.join(kok, "profiller")}
+    k = kos("tr_profil.py", "yeni", kisi, cv, env=env)
+    assert k.returncode == 0, k.stderr
+    d = os.path.join(kok, "profiller", kisi)
+    for ad, icerik in {"terimler.txt": "insan kaynakları uzmanı\nHR specialist\n", "kk_terimler.txt": "sosyoloji\n",
+                       "iller.txt": iller, "rol_kokleri.txt": "insan kaynak\n\\bHR\\b\nidari\n",
+                       "meslekler.txt": "insan kaynakları\nidari işler\n"}.items():
+        with open(os.path.join(d, ad), "w", encoding="utf-8") as fh:
+            fh.write(icerik)
+    return d, env
+
+
+class Profil(unittest.TestCase):
+    def setUp(self):
+        self.k = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.k, ignore_errors=True)
+
+    def test_yeni_onay_ve_sonradan_degisiklik(self):
+        d, env = profil_kur(self.k)
+        self.assertIn("İnsan kaynakları", metin_oku(os.path.join(d, "cv.md")))
+        self.assertNotEqual(kos("tr_profil.py", "durum", "ayse_yilmaz", env=env).returncode, 0, "onaysız profil geçmemeli")
+        self.assertEqual(kos("tr_profil.py", "onayla", "ayse_yilmaz", env=env).returncode, 0)
+        self.assertEqual(kos("tr_profil.py", "durum", "ayse_yilmaz", env=env).returncode, 0)
+        t = os.path.getmtime(os.path.join(d, "ONAYLANDI")) + 10
+        os.utime(os.path.join(d, "terimler.txt"), (t, t))
+        self.assertNotEqual(kos("tr_profil.py", "durum", "ayse_yilmaz", env=env).returncode, 0, "onaydan sonra değişen profil geçmemeli")
+
+    def test_bos_profil_onaylanmaz(self):
+        d, env = profil_kur(self.k)
+        with open(os.path.join(d, "rol_kokleri.txt"), "w", encoding="utf-8") as fh:
+            fh.write("# yalnız açıklama\n")
+        k = kos("tr_profil.py", "onayla", "ayse_yilmaz", env=env)
+        self.assertNotEqual(k.returncode, 0)
+        self.assertIn("rol_kokleri.txt boş", k.stderr)
+
+    def test_bilinmeyen_il_onaylanmaz(self):
+        d, env = profil_kur(self.k, iller="Ankara\nIstanbull\n")
+        k = kos("tr_profil.py", "onayla", "ayse_yilmaz", env=env)
+        self.assertNotEqual(k.returncode, 0)
+        self.assertIn("bilinmeyen il", k.stderr)
+
+    def test_gecersiz_kisi_adi(self):
+        self.assertNotEqual(kos("tr_profil.py", "onayla", "Ayşe Y", env={"TR_PROFILLER": self.k}).returncode, 0)
+
+    def test_suzgec_profil_kokleri_ve_iller(self):
+        d, env = profil_kur(self.k)
+        t = os.path.join(self.k, "tarama")
+        os.makedirs(t)
+        ilanlar_yaz(t, [
+            {"portal": "LinkedIn", "id": "1", "baslik": "İnsan Kaynakları Uzmanı", "konum": "Ankara, Türkiye"},
+            {"portal": "LinkedIn", "id": "2", "baslik": "HR Business Partner", "konum": "İstanbul"},
+            {"portal": "LinkedIn", "id": "3", "baslik": "Data Analyst", "konum": "Ankara"},
+            {"portal": "Kariyer Kapısı", "id": "4", "baslik": "BAKANLIK - ALIM", "konum": "BAKANLIK MERKEZ TEŞKİLATI"},
+        ])
+        k = kos("tr_baslik_suzgec.py", t, "--profil", d)
+        self.assertEqual(k.returncode, 0, k.stderr)
+        ilg = {r["id"]: r["konum_sinifi"] for r in csv_oku(os.path.join(t, "ilanlar_ilgili.csv"))}
+        self.assertEqual(ilg, {"1": "Ankara", "4": "Ankara (merkez teşkilatı)"},
+                         "profil kökleri (İK) ve iller (yalnız Ankara) uygulanmalı; Data Analyst ve İstanbul dışarıda")
+
+    def test_kuyruk_baska_kisinin_degerlendirmesini_saymaz(self):
+        kok = os.path.join(self.k, "taramalar")
+        alan = ALANLAR + ["konum_sinifi"]
+        for kisi in ("ayse", "mehmet"):
+            os.makedirs(os.path.join(kok, kisi, "2026-11-01"))
+        for kisi in ("ayse", "mehmet"):
+            t = os.path.join(kok, kisi, "2026-11-20")
+            os.makedirs(t)
+            with open(os.path.join(t, "ilanlar_ilgili.csv"), "w", encoding="utf-8-sig", newline="") as fh:
+                w = csv.DictWriter(fh, fieldnames=alan)
+                w.writeheader()
+                w.writerow({a: "" for a in alan} | {"portal": "LinkedIn", "id": "7"})
+        json_yaz(os.path.join(kok, "mehmet", "2026-11-01", "deger_cv.json"), {"LinkedIn|7": ["Orta", "", ""]})
+        kos("tr_yeni.py", os.path.join(kok, "ayse", "2026-11-20"))
+        kos("tr_yeni.py", os.path.join(kok, "mehmet", "2026-11-20"))
+        ayse = csv_oku(os.path.join(kok, "ayse", "2026-11-20", "ilanlar_degerlendirilecek.csv"))
+        mehmet = csv_oku(os.path.join(kok, "mehmet", "2026-11-20", "ilanlar_degerlendirilecek.csv"))
+        self.assertEqual(len(ayse), 1, "Mehmet'in değerlendirmesi Ayşe'nin kuyruğundan ilanı düşürmemeli")
+        self.assertEqual(len(mehmet), 0)
+
+
+@unittest.skipIf(bash_yolu() is None, "bash yok (Windows'ta Git Bash gerekir)")
+class TaramaProfil(unittest.TestCase):
+    def setUp(self):
+        self.k = tempfile.mkdtemp()
+
+    def tearDown(self):
+        shutil.rmtree(self.k, ignore_errors=True)
+
+    def tara(self, profil):
+        cikti = os.path.join(self.k, "t").replace("\\", "/")
+        k = subprocess.run([bash_yolu(), "tools/tr_tarama.sh", cikti, "knet", "kk"], cwd=REPO, capture_output=True,
+                           text=True, encoding="utf-8", env=dict(os.environ, KURU="1", PROFIL=profil.replace("\\", "/")))
+        return k
+
+    def test_onaysiz_profil_durur(self):
+        d, _ = profil_kur(self.k)
+        k = self.tara(d)
+        self.assertEqual(k.returncode, 2)
+        self.assertIn("onayli degil", k.stderr)
+
+    def test_profil_terimleri_ve_illeri(self):
+        d, env = profil_kur(self.k)
+        self.assertEqual(kos("tr_profil.py", "onayla", "ayse_yilmaz", env=env).returncode, 0)
+        k = self.tara(d)
+        log = metin_oku(os.path.join(self.k, "t", "tarama.log"))
+        self.assertEqual(k.returncode, 0, k.stderr + log[-500:])
+        self.assertIn("PORTAL knet beklenen=2", log, "2 terim x 1 il (yalnız Ankara)")
+        self.assertIn("knet__insan_kaynaklari_uzmani__Ankara__p1.json", log)
+        self.assertIn("kk__sosyoloji__TR__p1.json", log)
+        self.assertNotIn("Istanbul", log)
+
+
 class DetayCek(unittest.TestCase):
     def test_blocked_portal_durur_digeri_surer(self):
         d = tempfile.mkdtemp()

@@ -8,6 +8,7 @@
 #   BUN=<yol>     bun yerine kullanilacak program (sinama icin sahte CLI)
 #   LI_DEVAM="terim|il|baslangic_sayfa;..."  li_devam portali icin
 #   GUN_<PORTAL>, BEKLE_* pencere ve bekleme sureleri (asagidaki varsayilanlar); TERIM_DOSYASI, KK_TERIM_DOSYASI
+#   PROFIL=profiller/<kisi>   kisi profili (terimler, Kariyer Kapisi terimleri, iller); onay sarti
 #
 # Cikis kodu: 0 hepsi tamam | 3 en az bir istek/kombinasyon basarisiz | 4 en az bir portal BLOCKED
 #             | 2 kullanim hatasi | 6 on kosul (bun) yok
@@ -29,14 +30,26 @@ BUN="${BUN:-bun}"
 mkdir -p "$OUT/ham"
 LOG="$OUT/tarama.log"
 
-# Terimler config/ altindan okunur (satir basina bir terim; # ve bos satir atlanir).
-# TERIM_DOSYASI / KK_TERIM_DOSYASI ile baska dosya verilebilir.
+# Kisi profili (tools/tr_profil.py): PROFIL=profiller/<kisi> verilirse terimler, Kariyer Kapisi terimleri ve
+# iller profilden okunur. Profil onayli olmali ve onaydan sonra degismemis olmali.
+if [ -n "${PROFIL:-}" ]; then
+  [ -f "$PROFIL/ONAYLANDI" ] || { echo "PROFIL onayli degil: $PROFIL (python tools/tr_profil.py onayla <kisi>)" >&2; return 2; }
+  for pf in terimler.txt kk_terimler.txt iller.txt; do
+    [ -f "$PROFIL/$pf" ] || { echo "PROFIL dosyasi yok: $PROFIL/$pf" >&2; return 2; }
+    [ "$PROFIL/$pf" -nt "$PROFIL/ONAYLANDI" ] && { echo "PROFIL onaydan sonra degisti: $pf (yeniden onaylayin)" >&2; return 2; }
+  done
+  TERIM_DOSYASI="${TERIM_DOSYASI:-$PROFIL/terimler.txt}"; KK_TERIM_DOSYASI="${KK_TERIM_DOSYASI:-$PROFIL/kk_terimler.txt}"
+  ILLER_DOSYASI="${ILLER_DOSYASI:-$PROFIL/iller.txt}"
+fi
+# Terimler (profil yoksa) config/ altindan okunur (satir basina bir terim; # ve bos satir atlanir).
+# TERIM_DOSYASI / KK_TERIM_DOSYASI / ILLER_DOSYASI ile baska dosya verilebilir.
 terim_oku() {  # terim_oku <dosya> -> satirlar
   [ -f "$1" ] || { echo "Terim dosyasi yok: $1" >&2; return 1; }
   sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$1" | grep -v -e '^#' -e '^$'
 }
 mapfile -t TERIMLER < <(terim_oku "${TERIM_DOSYASI:-config/tr_terimler.txt}") || return 2
-ILLER=("Ankara" "İstanbul")
+if [ -n "${ILLER_DOSYASI:-}" ]; then mapfile -t ILLER < <(terim_oku "$ILLER_DOSYASI"); else ILLER=("Ankara" "İstanbul"); fi
+[ ${#ILLER[@]} -gt 0 ] || { echo "Il listesi bos" >&2; return 2; }
 # Kariyer Kapisi: kamu ilanlari kurum duyurusu; basliklarda rol adi yok, metinde bolum sarti var
 # ("iktisat", "istatistik"). Rol terimleriyle 21/21 sorgu 0 dondu (2026-11-16). Tam metin aranir,
 # il API'de degil alt ilanlarin kontenjan listesinde: her ilanin detayi ayrica cekilir.
