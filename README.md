@@ -34,12 +34,21 @@ Toplu tarama betikleri `tools/` klasöründedir:
 
 ## CV uyum akışı
 
-1. Tarama: `bash tools/tr_tarama.sh taramalar/<tarih> kk knet li rg iskur`, sonra `python tools/tr_birlestir.py taramalar/<tarih> <başlangıç YYYY-AA-GG>` ve `python tools/tr_baslik_suzgec.py taramalar/<tarih>`.
-2. CV'yi oku: `python tools/cv_oku.py documents/cv/<cv>.pdf` (ya da `.docx`).
-3. Claude ilgili ilanları CV ile karşılaştırır ve `taramalar/<tarih>/deger_cv.json` dosyasını yazar:
-   `{"<portal>|<id>": ["Güçlü|Orta|Zayıf|Elendi", "şart özeti", "yorum"]}`
-4. Excel: `python tools/tr_excel.py taramalar/<tarih> taramalar/<tarih>/deger_cv.json`
-   Çıktı `cv_uyum_<tarih>.xlsx` dosyasıdır: "Değerlendirilen" (renkli uyum etiketi) ve "Tüm ilanlar" sayfaları. Dosya iş bitince açılır; `--acma` açmayı kapatır. Aynı ad Excel'de açıksa saat ekli yeni ad kullanılır. Kaynak varsayılanı `ilanlar_ilgili.csv`; başka bir süzülmüş CSV için `--kaynak <dosya>` verin.
+Komutlar depo kökünden koşulur; `K=taramalar/<tarih>` tarama klasörüdür. Her adımın çıktısı bir sonrakinin girdisidir.
+
+| Adım | Komut | Çıktı (`$K/` altında) |
+|---|---|---|
+| 1. Tarama | `bash tools/tr_tarama.sh $K kk knet li rg iskur` | `ham/*.json`, `tarama.log` (portal başına `PORTAL` satırı; çıkış kodu 3 = hata, 4 = engellendi). Önce `KURU=1` ile ağsız plan görülebilir |
+| 2. Birleştir | `python tools/tr_birlestir.py $K <başlangıç YYYY-AA-GG>` | `ilanlar.csv`, `ilanlar.md` |
+| 3. Süz | `python tools/tr_baslik_suzgec.py $K` | `ilanlar_ilgili.csv` (kurallar `config/tr_suzgec.json`), `ilanlar_serbest.csv` |
+| 4. Resmî Gazete | `python tools/tr_rg_detay.py $K` ve `python tools/tr_rg_il.py $K` | `rg_akademik.json` (ilan metni, il) |
+| 5. Kuyruk | `python tools/tr_yeni.py $K` | `ilanlar_degerlendirilecek.csv`: ilgili ilanlardan daha önce hiçbir `taramalar/*/deger*.json` dosyasında değerlendirilmemiş olanlar |
+| 6. İlan metni | `python tools/tr_detay_cek.py $K` | `detay/<portal>_<id>.txt` (kuyruktaki ilanların hepsi; var olan atlanır) |
+| 7. CV | `python tools/cv_oku.py documents/cv/<cv>.pdf` (ya da `.docx`) | CV metni (ekrana ya da `-o` ile dosyaya) |
+| 8. Değerlendirme | Claude `detay/` metinlerini CV ile karşılaştırır; kural `config/tr_etiket_kurali.md` | `deger_cv.json`: `{"<portal>\|<id>": ["Güçlü\|Orta\|Zayıf\|Elendi", "şart özeti", "yorum", ["zorunlu eksik", …]]}` |
+| 9. Excel | `python tools/tr_excel.py $K $K/deger_cv.json` | `cv_uyum_<tarih>.xlsx`: "Değerlendirilen" (renkli) + "Tüm ilanlar"; bitince açılır (`--acma` açmaz); dosya Excel'de açıksa saat ekli ad. Kaynak varsayılanı `ilanlar_ilgili.csv` (`--kaynak` ile değişir) |
+
+2026-11-16 Excel'i bu akışın eski sürümüyle üretildi: kaynak `ilanlar_ilgili_yeni.csv` idi (eski süzgeç, 205 ilgili ilan; "yeni" = önceki taramanın `ilanlar.csv` dosyasında olmayan). Eski süzgecin çıktısı üzerinde `tr_yeni.py --onceki-tarama taramalar/2026-11-02 --degerlendirme` aynı 154 satırı bayt bayt verir; yeni süzgeç (172 satır) farklı bir kuyruk üretir.
 
 ## Gereksinimler
 
