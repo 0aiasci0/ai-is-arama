@@ -10,7 +10,8 @@ Girdiler (tarama klasöründe):
   --kaynak    iş portalı ilanları CSV'si. Varsayılan: ilanlar_ilgili.csv (tr_baslik_suzgec.py çıktısı).
               Yalnız yeni ilanlar için süzülmüş bir CSV (ör. ilanlar_ilgili_yeni.csv) de verilebilir.
   rg_akademik.json   Resmî Gazete akademik ilanları (varsa okunur)
-  detay/knet_*.txt   Kariyer.net son başvuru tarihi (varsa okunur)
+  detay/<kod>_<id>.txt  ilan metni (tr_detay_cek.py); son başvuru tarihi buradan da okunur
+  Son başvuru önceliği: kaynak CSV "son_basvuru" sütunu / rg_akademik.json "son_basvuru" > detay metni
 deger.json: {"<portal>|<id>": ["Güçlü|Orta|Zayıf|Elendi", "şart özeti", "yorum"], "_not": "..."}
 Çıktı varsayılanı: <tarama_klasoru>/cv_uyum_<YYYY-MM-DD>.xlsx. Dosya açık ve kilitliyse saat ekli ad kullanılır.
 """
@@ -30,7 +31,13 @@ from openpyxl.utils import get_column_letter
 
 VARSAYILAN_KAYNAK = "ilanlar_ilgili.csv"
 RG_DOSYA = "rg_akademik.json"
-KNET_DETAY = os.path.join("detay", "knet_*.txt")
+TUM_ILANLAR = "ilanlar.csv"
+DETAY_DOSYALARI = os.path.join("detay", "*_*.txt")  # tr_detay_cek.py çıktısı: <kod>_<id>.txt
+DETAY_KOD = {"knet": "Kariyer.net", "li": "LinkedIn", "kk": "Kariyer Kapısı", "iskur": "İŞKUR",
+             "vit": "Vacancies in Turkey"}
+# CLI 'detail --format plain' satırları: Kariyer.net "Son başvuru: X", Vacancies in Turkey "Deadline: X",
+# Kariyer Kapısı "Başvuru: A → B" (B son başvuru). "—" (yok) eşleşmez.
+SON_BASVURU_DETAY = re.compile(r"(?:Son başvuru:|Deadline:|Başvuru:\s*\S+\s*→)\s*(\d{4}-\d{2}-\d{2}|\d{1,2}\.\d{1,2}\.\d{4})")
 SIRA = {"Güçlü": 1, "Orta": 2, "Zayıf": 3, "Elendi": 4}
 RENK = {"Güçlü": "C6EFCE", "Orta": "FFEB9C", "Zayıf": "FCE4D6", "Elendi": "F2F2F2"}
 SAYFA_DEG, SAYFA_TUM = "Değerlendirilen", "Tüm ilanlar"
@@ -43,10 +50,13 @@ def oku(klasor, kaynak):
     yol = os.path.join(klasor, kaynak)
     if not os.path.isfile(yol):
         sys.exit(f"HATA: kaynak CSV yok: {yol}")
+    son = {}  # (portal, id) -> son başvuru; öncelik: ilan verisi (API / RG metni) > detay metni
     for r in csv.DictReader(open(yol, encoding="utf-8-sig")):
         kayit[(r["portal"], r["id"])] = {"Kaynak": r["portal"], "İlan": r["baslik"], "Kurum": r["kurum"],
                                          "Yer": r["konum"], "Yayın": r["tarih"], "Konum sınıfı": r["konum_sinifi"],
                                          "Bağlantı": r["url"], "ID": r["id"]}
+        if r.get("son_basvuru"):
+            son[(r["portal"], r["id"])] = r["son_basvuru"]
     n_portal = len(kayit)
     rg = os.path.join(klasor, RG_DOSYA)
     if os.path.isfile(rg):
@@ -54,11 +64,16 @@ def oku(klasor, kaynak):
             kayit[("Resmî Gazete", r["id"])] = {"Kaynak": "Resmî Gazete", "İlan": r["baslik"], "Kurum": r["kurum"],
                                                 "Yer": r.get("il") or ", ".join(r["iller"]), "Yayın": r["tarih"],
                                                 "Konum sınıfı": "", "Bağlantı": r["url"], "ID": r["id"]}
-    son = {}
-    for f in glob.glob(os.path.join(klasor, KNET_DETAY)):
-        m = re.search(r"Son başvuru: (\S+)", open(f, encoding="utf-8").read())
+            if r.get("son_basvuru"):
+                son[("Resmî Gazete", r["id"])] = r["son_basvuru"]
+    for f in glob.glob(os.path.join(klasor, DETAY_DOSYALARI)):
+        kod, _, iid = os.path.basename(f)[:-4].partition("_")
+        anahtar = (DETAY_KOD.get(kod), iid)
+        if anahtar[0] is None or anahtar in son:
+            continue
+        m = SON_BASVURU_DETAY.search(open(f, encoding="utf-8").read())
         if m:
-            son[("Kariyer.net", os.path.basename(f)[5:-4])] = m.group(1)
+            son[anahtar] = m.group(1)
     print(f"kaynak: {kaynak} ({n_portal} ilan) + {RG_DOSYA} ({len(kayit) - n_portal}) + son başvuru {len(son)}",
           flush=True)
     return kayit, son
@@ -79,10 +94,27 @@ def bicimle(ws, df, link_kol):
             c.font = Font(color="0563C1", underline="single")
 
 
+def tamamla(klasor, kayit, deger):
+    """Değerlendirilmiş ama kaynak CSV'de olmayan ilanları (ör. süzgeç kuralı sonradan değişti) ilanlar.csv'den alır."""
+    eksik = [k for k in deger if k not in kayit]
+    tum = os.path.join(klasor, TUM_ILANLAR)
+    if eksik and os.path.isfile(tum):
+        bul = set(eksik)
+        for r in csv.DictReader(open(tum, encoding="utf-8-sig")):
+            k = (r["portal"], r["id"])
+            if k in bul:
+                kayit[k] = {"Kaynak": r["portal"], "İlan": r["baslik"], "Kurum": r["kurum"], "Yer": r["konum"],
+                            "Yayın": r["tarih"], "Konum sınıfı": "(süzgeç dışı)", "Bağlantı": r["url"], "ID": r["id"]}
+        alinan = sum(k in kayit for k in eksik)
+        if alinan:
+            print(f"UYARI: değerlendirilmiş {alinan} ilan kaynak CSV'de yok; {TUM_ILANLAR} dosyasından alındı "
+                  f"(Konum sınıfı '(süzgeç dışı)')", flush=True)
+
+
 def tablolar(kayit, son, deger):
     eksik = [k for k in deger if k not in kayit]
     if eksik:
-        sys.exit(f"HATA: değerlendirilen ilan kaynakta yok: {eksik}")
+        sys.exit(f"HATA: değerlendirilen ilan kaynakta da {TUM_ILANLAR} dosyasında da yok: {eksik}")
     bicim = [k for k, v in deger.items() if not isinstance(v, list) or len(v) not in (3, 4)
              or (len(v) == 4 and not isinstance(v[3], list))]
     if bicim:
@@ -160,6 +192,7 @@ def main(argv=None):
     kayit, son = oku(a.klasor, a.kaynak)
     deger = {tuple(k.split("|", 1)): v for k, v in json.load(open(a.deger, encoding="utf-8")).items()
              if not k.startswith("_")}
+    tamamla(a.klasor, kayit, deger)
     df_deg, df_tum = tablolar(kayit, son, deger)
 
     cikti = a.cikti or os.path.join(a.klasor, f"cv_uyum_{dt.date.today().isoformat()}.xlsx")

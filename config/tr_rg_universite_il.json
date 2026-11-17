@@ -1,0 +1,27 @@
+{
+  "_aciklama": "tools/tr_rg_il.py: Resmî Gazete ilanını veren üniversitenin ili. Anahtar kurum adının başıdır ('… Rektörlüğünden' öncesi). Sıra: bu tablo → kurum adı 'Ankara'/'İstanbul' ile başlıyorsa o il → ilan metninin tamamında geçen il. Yalnız Ankara/İstanbul üniversiteleri gerekir.",
+  "_kaynak": "İlk 15 satır 2026-11 taramalarında ilan metinlerinden okundu; 'elle_2026_11_17' altındakiler kaynakla doğrulanmadı (YÖK listesi adresi 404 döndü).",
+  "tablo": {
+    "Gazi Üniversitesi": "Ankara",
+    "Ankara Hacı Bayram Veli": "Ankara",
+    "Mimar Sinan": "İstanbul",
+    "Boğaziçi": "İstanbul",
+    "İstanbul Beykent": "İstanbul",
+    "Haliç": "İstanbul",
+    "İstinye": "İstanbul",
+    "Yeditepe": "İstanbul",
+    "İstanbul Üniversitesi": "İstanbul",
+    "Marmara": "İstanbul",
+    "Fatih Sultan Mehmet Vakıf": "İstanbul",
+    "Fenerbahçe": "İstanbul",
+    "Bahçeşehir": "İstanbul",
+    "Koç Üniversitesi": "İstanbul",
+    "Türkiye Uluslararası İslam, Bilim ve Teknoloji": "İstanbul"
+  },
+  "elle_2026_11_17": {
+    "Biruni": "İstanbul",
+    "Üsküdar": "İstanbul",
+    "TED Üniversitesi": "Ankara",
+    "Yüksek İhtisas": "Ankara"
+  }
+}
