@@ -10,6 +10,13 @@ Repo: yerel private klon, `upstream` = MadsLorentzen/ai-job-search. Yalnız yeni
 | Kariyer.net | `kariyernet-search` | /is-ilanlari SSR, data-test çapaları, adCount | bitti: canlı arama/konum/detay, 19 test; 1×403 gözlendi |
 | Akademik | `resmigazete-akademik-search` | eskiler/YYYYMMDD.htm → Çeşitli İlânlar → PDF | bitti: canlı arama/peek/detay, 16 test, 28'lik altın küme |
 | LinkedIn | `linkedin-search` (upstream) | kod değişmedi | bitti: `-l "Türkiye"`, `"Ankara, Türkiye"` canlı |
+| Vacancies in Turkey | `vacanciesinturkey-search` (2026-11-17) | `/jm-ajax/get_listings/` + `/job/<slug>/` JSON-LD | bitti: canlı arama/detay, 32 test; Türkiye süzgeci 94 açık ilanda metinden etiketlendi (7 no hepsi yurt dışı; 30 unclear'ın 29'u TR) |
+
+## 2026-11-17 eklemeleri (commit/push bekliyor)
+- `tools/tr_excel.py`: CV uyum Excel'i (Değerlendirilen + Tüm ilanlar), bitince açar; kilitli dosyada saat ekli ad. Altın kıyas: 2026-11-16 dosyasıyla hücre farkı 0.
+- `tools/cv_oku.py`: PDF (PyMuPDF) + DOCX (python-docx; tablo, metin kutusu, üst/alt bilgi). Taranmış PDF → çıkış 2.
+- `vacanciesinturkey-search`: tarama hattına (`tr_tarama.sh`, `tr_birlestir.py`) bağlı değil — karar bekliyor.
+- UN Careers: tarayıcı başlıklı tek istek 200, başlıksız 403; skill yazılmadı — karar bekliyor.
 
 ## Notlar
 - ilan.gov.tr: API Kong'da 403 (UA/çerez/tarayıcı başlıkları denendi; robots izinli). Chrome eklentisi bağlanırsa ağ isteği gözlenip yeniden denenebilir.

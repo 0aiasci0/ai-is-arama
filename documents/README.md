@@ -30,7 +30,7 @@ documents/
 
 Your master CV — the most complete, unedited version of your professional record.
 
-**Supported formats:** `.pdf`, `.tex`
+**Supported formats:** `.pdf`, `.docx`, `.tex` (`.docx` and `.pdf` text is extracted with `tools/cv_oku.py`; legacy `.doc` is not supported)
 
 **What `/setup` extracts:**
 - Work experience (titles, companies, dates, bullet points)

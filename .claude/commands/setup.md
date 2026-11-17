@@ -112,6 +112,8 @@ Hold this content in context throughout Path A. Do not re-read.
 
 Read each document found in Step A1. Process subfolders in this order: `cv/`, `linkedin/`, `diplomas/`, `references/`, `projects/`, `applications/`.
 
+**`.docx` and `.pdf` files (Türkiye uyarlaması):** extract text with `python tools/cv_oku.py <file>` and read its output. The Read tool cannot open `.docx`. The script keeps tables, text boxes, headers and footers. Exit code 2 means almost no text came out (scanned PDF): tell the user and ask for a text-based PDF or `.docx`. Legacy `.doc` is not supported; ask the user to save it as `.docx`.
+
 **`cv/` documents:** name, contact (email, phone, LinkedIn, GitHub), education (degree, institution, dates, thesis), work experience (title, company, dates, location, bullets), skills, languages (with any stated proficiency), publications, awards, profile/summary.
 
 **`linkedin/` documents:** About/summary section (full text, used for behavioral inference), work experience, education, skills and endorsements, **Languages section** (language name + self-rated proficiency level, e.g. "Spanish - Native or bilingual proficiency" - a high-confidence structured source, feeds the Language Gate in `04-job-evaluation.md`), certifications, volunteer work, publications, recommendations received (full text). If multiple LinkedIn exports are present, use the most recently modified file.
@@ -255,7 +257,7 @@ Then proceed to Step 3 to populate the non-skill files (`CLAUDE.md`, `cv/main_ex
 
 If the user provides a single CV/resume:
 
-1. Read the document thoroughly.
+1. Read the document thoroughly. For a `.docx` or `.pdf` file, run `python tools/cv_oku.py <file>` and read its output (see Step A3).
 2. Extract all structured information: name, contact, education, experience, skills, languages, publications, awards.
 3. Present a summary of what was extracted.
 4. Ask follow-up questions for gaps (behavioral profile, career goals, deal-breakers, languages and proficiency levels if not already extracted, salary expectations, references).

@@ -1,6 +1,6 @@
 # Türkiye portalları
 
-Bu klon, `MadsLorentzen/ai-job-search` çatısına beş Türkiye kaynağı ekler.
+Bu klon, `MadsLorentzen/ai-job-search` çatısına altı Türkiye kaynağı ekler.
 Çekirdek akış (`/setup`, `/scrape`, `/apply`) değişmez. `/scrape`, `.agents/skills/*/SKILL.md` dosyalarını kendisi bulur.
 
 ## Kaynaklar
@@ -11,6 +11,7 @@ Bu klon, `MadsLorentzen/ai-job-search` çatısına beş Türkiye kaynağı ekler
 | `iskur-search` | esube.iskur.gov.tr | İŞKUR açık iş ilanları: özel sektör ve kamu işçi | WebForms araması (postback) |
 | `kariyernet-search` | kariyer.net | Özel sektör ilanları | Sunucu tarafı HTML |
 | `resmigazete-akademik-search` | resmigazete.gov.tr | Üniversite kadro ilanları (Çeşitli İlânlar) | Günlük dizin + PDF (pdftotext) |
+| `vacanciesinturkey-search` | vacanciesinturkey.com | İngilizce ilanlar: özel sektör, BM, STK, elçilik | WP Job Manager arama ucu + ilan sayfası JSON-LD; Türkiye süzgeci ilan metnine bakar |
 | `linkedin-search` | linkedin.com | Ülke bağımsız; kod değişmedi | `-l "Türkiye"`, `-l "Ankara, Türkiye"` |
 
 Danimarka portalları (`jobindex`, `jobnet`, `jobbank`, `jobdanmark`) yukarı akışta zaten `enabled: false` gelir. Onlara dokunulmadı.
@@ -18,13 +19,14 @@ Danimarka portalları (`jobindex`, `jobnet`, `jobbank`, `jobdanmark`) yukarı ak
 
 ## İzin satırları (isteğe bağlı)
 
-`.claude/settings.json` izin listesi CLI yollarını tek tek sayar. Yeni dört CLI orada yok; bu yüzden her çağrıda onay ister. Onayları kaldırmak için şu satırları `.claude/settings.local.json` içindeki `permissions.allow` dizisine ekleyin. Bu dosya yukarı akışla çakışmaz.
+`.claude/settings.json` izin listesi CLI yollarını tek tek sayar. Yeni beş CLI orada yok; bu yüzden her çağrıda onay ister. Onayları kaldırmak için şu satırları `.claude/settings.local.json` içindeki `permissions.allow` dizisine ekleyin. Bu dosya yukarı akışla çakışmaz.
 
 ```json
 "Bash(bun run .agents/skills/kariyerkapisi-search/cli/src/cli.ts:*)",
 "Bash(bun run .agents/skills/iskur-search/cli/src/cli.ts:*)",
 "Bash(bun run .agents/skills/kariyernet-search/cli/src/cli.ts:*)",
-"Bash(bun run .agents/skills/resmigazete-akademik-search/cli/src/cli.ts:*)"
+"Bash(bun run .agents/skills/resmigazete-akademik-search/cli/src/cli.ts:*)",
+"Bash(bun run .agents/skills/vacanciesinturkey-search/cli/src/cli.ts:*)"
 ```
 
 ## Hızlı deneme

@@ -1,3 +1,6 @@
 # Türkiye uyarlamasının Python bağımlılıkları (tools/tr_*.py)
 # Kurulum: python -m pip install -r requirements-tr.txt
-pymupdf  # tools/tr_rg_ocr.py: taranmış Resmî Gazete PDF'ini görüntüye çevirir
+pymupdf  # tools/tr_rg_ocr.py ve tools/cv_oku.py: PDF metni ve görüntüsü
+python-docx  # tools/cv_oku.py: .docx CV okuma
+pandas  # tools/tr_excel.py
+openpyxl  # tools/tr_excel.py: Excel yazımı
