@@ -33,6 +33,23 @@ for f in sorted(glob.glob(os.path.join(OUT, "ham", "*.json")) + glob.glob(os.pat
         ilan[k]["terimler"].add(terim)
         ilan[k]["il_aramasi"].add(il)
 
+# Kariyer Kapısı: arama satırında il yok; detay dosyası (ham/kkdetay/<guid>.json) alt ilanların
+# kontenjan illerini taşır.
+kk_detay = 0
+for (portal, iid), r in ilan.items():
+    if portal != "kk":
+        continue
+    yol = os.path.join(OUT, "ham", "kkdetay", f"{iid}.json")
+    if os.path.isfile(yol):
+        try:
+            d = json.load(open(yol, encoding="utf-8"))
+        except json.JSONDecodeError:
+            continue
+        r["konum"] = d.get("location") or r["konum"]
+        kk_detay += 1
+if any(p == "kk" for p, _ in ilan):
+    print("Kariyer Kapısı detaydan il:", kk_detay, "/", sum(p == "kk" for p, _ in ilan), flush=True)
+
 rows = list(ilan.values())
 for r in rows:
     r["terimler"] = ";".join(sorted(r["terimler"]))

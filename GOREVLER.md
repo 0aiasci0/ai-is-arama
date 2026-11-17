@@ -12,7 +12,15 @@ Repo: yerel private klon, `upstream` = MadsLorentzen/ai-job-search. Yalnız yeni
 | LinkedIn | `linkedin-search` (upstream) | kod değişmedi | bitti: `-l "Türkiye"`, `"Ankara, Türkiye"` canlı |
 | Vacancies in Turkey | `vacanciesinturkey-search` (2026-11-17) | `/jm-ajax/get_listings/` + `/job/<slug>/` JSON-LD | bitti: canlı arama/detay, 32 test; Türkiye süzgeci 94 açık ilanda metinden etiketlendi (7 no hepsi yurt dışı; 30 unclear'ın 29'u TR) |
 
-## 2026-11-17 eklemeleri (commit/push bekliyor)
+## İnceleme planı uygulaması (2026-11-17; plan: .claude/governance/inceleme_2026-11-17.md, yerel)
+| Sıra | İş | Durum | Kanıt |
+|---|---|---|---|
+| 1 | Depo gizli + kişisel klasörler gitignore | bitti | `gh repo view` PRIVATE; 4/4 kişisel dosya check-ignore; commit 4b61b41 |
+| 2 | CI `main` dalında | bitti | Actions koşusu 44148862302: Python 5/5, TR CLI 6/6 başarılı; Danimarka CLI 4/4 başarısız (ayrı iş) |
+| 3 | tr_tarama.sh: main(), PORTAL satırı, çıkış kodu, KURU | bitti | Ağsız sınama: KURU kod=0, sahte BLOCKED kod=4, sahte hata kod=3, koşu ortası Edit exit 0; #17 #18 KAPANDI; commit 822a813 |
+| 4 | Kariyer Kapısı: bölüm terimleri + detaydan il | bitti | Canlı pilot 16 istek: 12 ilan, 9 ilgili (önce 0); altın küme 5/5 Ankara ilanı (KİK, SGK, KDK, NDK, Sayıştay); eski veride çıktı bayt aynı |
+
+## 2026-11-17 eklemeleri
 - `tools/tr_excel.py`: CV uyum Excel'i (Değerlendirilen + Tüm ilanlar), bitince açar; kilitli dosyada saat ekli ad. Altın kıyas: 2026-11-16 dosyasıyla hücre farkı 0.
 - `tools/cv_oku.py`: PDF (PyMuPDF) + DOCX (python-docx; tablo, metin kutusu, üst/alt bilgi). Taranmış PDF → çıkış 2.
 - `vacanciesinturkey-search`: tarama hattına (`tr_tarama.sh`, `tr_birlestir.py`) bağlı değil — karar bekliyor.

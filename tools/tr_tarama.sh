@@ -30,6 +30,11 @@ LOG="$OUT/tarama.log"
 
 TERIMLER=("ekonomist" "araştırmacı" "economist" "research" "veri analisti" "data analyst" "data scientist")
 ILLER=("Ankara" "İstanbul")
+# Kariyer Kapisi: kamu ilanlari kurum duyurusu; basliklarda rol adi yok, metinde bolum sarti var
+# ("iktisat", "istatistik"). Rol terimleriyle 21/21 sorgu 0 dondu (2026-11-16). Tam metin aranir,
+# il API'de degil alt ilanlarin kontenjan listesinde: her ilanin detayi ayrica cekilir.
+KK_TERIMLER=("iktisat" "istatistik" "ekonomi" "ekonometri")
+KK_SAYFA=20  # CLI istemci tarafinda 20 satirlik sayfa keser
 GUN_KK=15; GUN_KNET=15; GUN_LI=30; GUN_RG=16; GUN_ISKUR=15
 BEKLE_KNET=20; BEKLE_LI=3; BEKLE_LI_HATA=15
 if [ "$KURU" = 1 ]; then BEKLE_KNET=0; BEKLE_LI=0; BEKLE_LI_HATA=0; fi
@@ -73,11 +78,25 @@ for P in "$@"; do
 portal_bas
 case "$P" in
 kk)
-  for t in "${TERIMLER[@]}"; do for il in "${ILLER[@]}" "Türkiye Geneli"; do
-    DENENEN=$((DENENEN+1))
-    kos "$OUT/ham/kk__$(slug "$t")__$(slug "$il").json" $S/kariyerkapisi-search/cli/src/cli.ts search -q "$t" -l "$il" --jobage $GUN_KK --limit 500
-  done; done
-  portal_son kk $(( ${#TERIMLER[@]} * (${#ILLER[@]} + 1) )) ;;
+  for t in "${KK_TERIMLER[@]}"; do
+    DENENEN=$((DENENEN+1)); pg=1
+    while :; do
+      f="$OUT/ham/kk__$(slug "$t")__TR__p$pg.json"
+      kos "$f" $S/kariyerkapisi-search/cli/src/cli.ts search -q "$t" --jobage $GUN_KK --page $pg || break
+      total=$(grep -m1 '"total"' "$f" | tr -dc 0-9)
+      [ $(( pg * KK_SAYFA )) -lt "${total:-0}" ] || break; pg=$((pg+1))
+    done
+  done
+  # Detay: il (alt ilan kontenjan listesi) ve ilan metni. Yalniz duyuru olan ilanin (ilanTipi 2)
+  # detayi yoktur (NOT_FOUND): hata sayilmaz.
+  mkdir -p "$OUT/ham/kkdetay"
+  for g in $(grep -ho '"id": "[^"]*"' "$OUT"/ham/kk__*.json 2>/dev/null | cut -d'"' -f4 | sort -u); do
+    f="$OUT/ham/kkdetay/$g.json"
+    if ! kos "$f" $S/kariyerkapisi-search/cli/src/cli.ts detail "$g"; then
+      if grep -q NOT_FOUND "$f.err"; then HATAN=$((HATAN-1)); log "KK DETAY YOK $g (yalniz duyuru)"; rm -f "$f" "$f.err"; fi
+    fi
+  done
+  portal_son kk ${#KK_TERIMLER[@]} ;;
 knet)
   for t in "${TERIMLER[@]}"; do for il in "${ILLER[@]}"; do
     DENENEN=$((DENENEN+1)); pg=1
