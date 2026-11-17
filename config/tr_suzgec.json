@@ -1,0 +1,18 @@
+{
+  "_aciklama": "tools/tr_baslik_suzgec.py kuralları. Düzenli ifadeler büyük/küçük harfe duyarsız. Kökler 2026-11-16 altın kümesinde ölçüldü (inceleme 2): 55/55 ilgili korundu, alakasız+platform 150 → 80, kaçan 45 adaydan 33'ü yakalandı.",
+  "rol_kokleri": [
+    "ekonom", "econom", "iktisat", "araştırma", "arastirma", "research", "analist", "analyst", "analiz",
+    "analytic", "analiti", "veri(?!f)", "data", "scien", "bilimci", "istatisti", "statisti", "ekonometri",
+    "econometric",
+    "polic", "politika", "\\bMEAL\\b", "kalkınma", "teşvik", "incentive", "sustainab", "sürdürülebil",
+    "insight", "içgörü", "investment officer", "\\bindex\\b"
+  ],
+  "_rol_kokleri_disarida": "consult, strateg, pricing, fiyatla, monitoring: ölçümde çok sayıda alakasız başlık getirdi, eklenmedi.",
+  "dislama": [
+    "clinical", "klinik", "\\bCRA\\b", "verification", "data center", "database", "veri tabanı", "veri ambar",
+    "data engineer", "veri mühendis", "sciences", "research engineer"
+  ],
+  "_dislama_aciklama": "Başlıkta ya da kurum adında geçerse ilan ilgili listeye girmez (klinik araştırma, veri altyapısı mühendisliği).",
+  "serbest_platform": ["crossing hurdles", "alignerr", "aligned labs", "proxify"],
+  "_serbest_platform_aciklama": "Saatlik/serbest iş platformları: ilgili listeye değil ilanlar_serbest.csv dosyasına yazılır (2026-11-16: 'Türkiye geneli/uzaktan' 39 satırın 32'si)."
+}
