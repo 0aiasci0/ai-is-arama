@@ -34,7 +34,7 @@ KNET_DETAY = os.path.join("detay", "knet_*.txt")
 SIRA = {"Güçlü": 1, "Orta": 2, "Zayıf": 3, "Elendi": 4}
 RENK = {"Güçlü": "C6EFCE", "Orta": "FFEB9C", "Zayıf": "FCE4D6", "Elendi": "F2F2F2"}
 SAYFA_DEG, SAYFA_TUM = "Değerlendirilen", "Tüm ilanlar"
-SARMA_KOLON = ("Şart özeti", "Yorum")
+SARMA_KOLON = ("Şart özeti", "Yorum", "Zorunlu eksik")
 KOLON_EN_AZ, KOLON_EN_COK = 10, 60
 
 
@@ -83,15 +83,28 @@ def tablolar(kayit, son, deger):
     eksik = [k for k in deger if k not in kayit]
     if eksik:
         sys.exit(f"HATA: değerlendirilen ilan kaynakta yok: {eksik}")
+    bicim = [k for k, v in deger.items() if not isinstance(v, list) or len(v) not in (3, 4)
+             or (len(v) == 4 and not isinstance(v[3], list))]
+    if bicim:
+        sys.exit(f"HATA: değer biçimi [etiket, şart, yorum] ya da [etiket, şart, yorum, [zorunlu eksik]] olmalı: {bicim}")
     bilinmeyen = {v[0] for v in deger.values()} - set(SIRA)
     if bilinmeyen:
         sys.exit(f"HATA: tanımsız uyum etiketi: {bilinmeyen}")
+    # Etiket kuralı 5 (config/tr_etiket_kurali.md): Güçlü en çok 1 zorunlu eksik taşır.
+    celiski = [k for k, v in deger.items() if v[0] == "Güçlü" and len(v) == 4 and len(v[3]) > 1]
+    if celiski:
+        sys.exit(f"HATA: 'Güçlü' etiketli ilanda 1'den çok zorunlu eksik (etiket kuralı 5): {celiski}")
+    eksik_kolon = any(len(v) == 4 for v in deger.values())
     deg = []
-    for k, (uyum, sart, yorum) in deger.items():
+    for k, v in deger.items():
+        uyum, sart, yorum = v[:3]
         r = kayit[k]
-        deg.append({"Uyum": uyum, "İlan": r["İlan"], "Kurum": r["Kurum"], "Yer": r["Yer"], "Kaynak": r["Kaynak"],
-                    "Son başvuru": son.get(k, ""), "Şart özeti": sart, "Yorum": yorum,
-                    "Bağlantı": r["Bağlantı"], "ID": r["ID"]})
+        satir = {"Uyum": uyum, "İlan": r["İlan"], "Kurum": r["Kurum"], "Yer": r["Yer"], "Kaynak": r["Kaynak"],
+                 "Son başvuru": son.get(k, ""), "Şart özeti": sart, "Yorum": yorum}
+        if eksik_kolon:
+            satir["Zorunlu eksik"] = "; ".join(v[3]) if len(v) == 4 else ""
+        satir.update({"Bağlantı": r["Bağlantı"], "ID": r["ID"]})
+        deg.append(satir)
     df_deg = pd.DataFrame(deg).sort_values("Uyum", key=lambda s: s.map(SIRA), kind="stable")
     tum = [dict(Değerlendirme=deger.get(k, ("",))[0], **v) for k, v in kayit.items() if k[0] != "Resmî Gazete"]
     df_tum = pd.DataFrame(tum).sort_values(["Kaynak", "İlan"])
@@ -104,7 +117,7 @@ def yaz(df_deg, df_tum, cikti):
         df_tum.to_excel(xw, sheet_name=SAYFA_TUM, index=False)
         ws = xw.sheets[SAYFA_DEG]
         bicimle(ws, df_deg, "Bağlantı")
-        sarma = [list(df_deg.columns).index(k) + 1 for k in SARMA_KOLON]
+        sarma = [list(df_deg.columns).index(k) + 1 for k in SARMA_KOLON if k in df_deg.columns]
         for r in range(2, len(df_deg) + 2):
             ws.cell(r, 1).fill = PatternFill("solid", fgColor=RENK[ws.cell(r, 1).value])
             for c in sarma:
