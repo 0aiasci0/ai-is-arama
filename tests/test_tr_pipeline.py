@@ -292,7 +292,10 @@ printf '{\\n  "meta": {\\n    "count": 0,\\n    "total": 0,\\n    "page": 1,\\n 
 SAHTE_BUN_PY = """import os, sys
 a = " ".join(sys.argv[1:])
 if "kariyernet" in a and os.environ.get("SAHTE_HATA") == "knet":
-    sys.stderr.write('{"error":"403","code":"BLOCKED"}\\n'); sys.exit(1)
+    # Gerçek CLI mesajı kadar uzun: kod 200. karakterden sonra gelir (2026-11-17 canlı pilotta yakalanan hata)
+    sys.stderr.write('{"error":"Kariyer.net refused the request (403, bot protection). Do not retry in a loop; see '
+                     '.claude/skills/job-application-assistant/09-web-research.md for the robots.txt-gated fallback.",'
+                     '"code":"BLOCKED"}\\n'); sys.exit(1)
 print("SAHTE DETAY " + a)
 """
 
@@ -321,6 +324,22 @@ class Tarama(unittest.TestCase):
         self.assertEqual(log.count("PORTAL "), 5)
         self.assertNotIn(" OK ", log)
         self.assertIn("CIKIS kod=0", log)
+
+    def test_gecici_hata_kurtarilinca_cikis_0(self):
+        """LinkedIn: ilk deneme düşer, ikincisi geçer → hata sayılmaz, çıkış 0 (gerçek taramalarda zaman aşımı olağan)."""
+        sahte = os.path.join(self.d, "bir_kez_dus.sh")
+        with open(sahte, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write('#!/usr/bin/env bash\nd="$(dirname "$0")"; k="$d/dustu_$(echo "$*" | md5sum | cut -c1-8)"\n'
+                     'if [ ! -f "$k" ]; then touch "$k"; echo \'{"error":"timeout","code":"SEARCH_FAILED"}\' >&2; exit 1; fi\n'
+                     + SAHTE_BUN_SH.split("\n", 2)[2])
+        os.chmod(sahte, 0o755)
+        terim = os.path.join(self.d, "terim.txt")
+        with open(terim, "w", encoding="utf-8") as fh:
+            fh.write("research\n")
+        k, log = self.tara("li", BUN=sahte.replace("\\", "/"), TERIM_DOSYASI=terim.replace("\\", "/"), BEKLE_LI_HATA="0")
+        self.assertEqual(k.returncode, 0, log[-800:])
+        self.assertIn("LI KURTARILDI", log)
+        self.assertIn("hata=0", log)
 
     def test_blocked_cikis_4(self):
         k, log = self.tara("knet", "iskur", BUN=self.sahte.replace("\\", "/"), SAHTE_HATA="knet")

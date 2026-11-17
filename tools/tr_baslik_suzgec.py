@@ -51,15 +51,19 @@ def main(argv=None):
     a = ap.parse_args(argv)
     rol, dislama, serbest = kural_oku(a.kural)
 
-    rows = list(csv.DictReader(open(os.path.join(a.klasor, "ilanlar.csv"), encoding="utf-8-sig")))
-    if not rows:
-        raise SystemExit("HATA: ilanlar.csv boş")
+    with open(os.path.join(a.klasor, "ilanlar.csv"), encoding="utf-8-sig") as fh:
+        okuyucu = csv.DictReader(fh)
+        rows = list(okuyucu)
+        basliklar = okuyucu.fieldnames
+    if not basliklar:
+        raise SystemExit("HATA: ilanlar.csv başlık satırı yok (tr_birlestir.py koştu mu?)")
     sec, serbest_sec, sayac = [], [], Counter()
     for r in rows:
         if r["portal"] not in METINDEN_ESLESEN and not rol.search(r["baslik"]):
             sayac["rol kökü yok"] += 1
             continue
-        if dislama.search(r["baslik"] + " " + r["kurum"]):
+        # Dışlama yalnız başlıkta: kurum adı ("Mérieux NutriSciences") ilgili bir ilanı düşürüyordu (2026-11-02 örneklem dışı sınama)
+        if dislama.search(r["baslik"]):
             sayac["dışlama"] += 1
             continue
         sinif = konum_sinifi(r)
@@ -72,7 +76,7 @@ def main(argv=None):
             continue
         sec.append(r)
     sec.sort(key=lambda r: (r["konum_sinifi"], r["portal"], r["baslik"]))
-    alanlar = list(rows[0].keys()) + ["konum_sinifi"]
+    alanlar = list(basliklar) + ["konum_sinifi"]
     for ad, liste in (("ilanlar_ilgili.csv", sec), ("ilanlar_serbest.csv", serbest_sec)):
         with open(os.path.join(a.klasor, ad), "w", encoding="utf-8-sig", newline="") as fh:
             w = csv.DictWriter(fh, fieldnames=alanlar)

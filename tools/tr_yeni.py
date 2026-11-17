@@ -57,14 +57,17 @@ def main(argv=None):
                   csv.DictReader(open(os.path.join(a.onceki_tarama, "ilanlar.csv"), encoding="utf-8-sig"))}
 
     yol = os.path.join(a.klasor, a.kaynak)
-    rows = list(csv.DictReader(open(yol, encoding="utf-8-sig")))
-    if not rows:
-        raise SystemExit(f"HATA: {yol} boş")
+    with open(yol, encoding="utf-8-sig") as fh:
+        okuyucu = csv.DictReader(fh)
+        rows = list(okuyucu)
+        basliklar = okuyucu.fieldnames
+    if not basliklar:
+        raise SystemExit(f"HATA: {yol} başlık satırı yok")
     sec = [r for r in rows if anahtar(r["portal"], r["id"]) not in gorulen | onceki]
     cikti = os.path.join(a.klasor, a.cikti)
     gecici = cikti + ".part"
     with open(gecici, "w", encoding="utf-8-sig", newline="") as fh:
-        w = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+        w = csv.DictWriter(fh, fieldnames=list(basliklar))
         w.writeheader()
         w.writerows(sec)
     os.replace(gecici, cikti)

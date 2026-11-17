@@ -12,7 +12,7 @@
     "clinical", "klinik", "\\bCRA\\b", "verification", "data center", "database", "veri tabanı", "veri ambar",
     "data engineer", "veri mühendis", "sciences", "research engineer"
   ],
-  "_dislama_aciklama": "Başlıkta ya da kurum adında geçerse ilan ilgili listeye girmez (klinik araştırma, veri altyapısı mühendisliği).",
+  "_dislama_aciklama": "Başlıkta geçerse ilan ilgili listeye girmez (klinik araştırma, veri altyapısı mühendisliği). Kurum adına bakılmaz (2026-11-02: 'Mérieux NutriSciences' sürdürülebilirlik ilanını düşürüyordu).",
   "serbest_platform": ["crossing hurdles", "alignerr", "aligned labs", "proxify"],
   "_serbest_platform_aciklama": "Saatlik/serbest iş platformları: ilgili listeye değil ilanlar_serbest.csv dosyasına yazılır (2026-11-16: 'Türkiye geneli/uzaktan' 39 satırın 32'si)."
 }

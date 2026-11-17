@@ -81,9 +81,9 @@ def main(argv=None):
             say[(p, "ok")] += 1
             print(f"OK {p} {r['id']} {len(k.stdout)}", flush=True)
         else:
-            hata = (k.stderr or "").strip()[:200]
-            print(f"HATA {p} {r['id']} {hata}", flush=True)
-            if "BLOCKED" in hata:
+            hata = (k.stderr or "").strip()
+            print(f"HATA {p} {r['id']} {hata[:200]}", flush=True)
+            if "BLOCKED" in hata:  # tam metinde ara: Kariyer.net mesajında kod 200. karakterden sonra gelir
                 bloklu.add(p)
                 say[(p, "blocked")] += 1
             else:

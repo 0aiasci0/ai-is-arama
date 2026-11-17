@@ -7,6 +7,7 @@
 #   KURU=1        ag istegi yok: CLI cagrilmaz, bos JSON yazilir, plan loglanir
 #   BUN=<yol>     bun yerine kullanilacak program (sinama icin sahte CLI)
 #   LI_DEVAM="terim|il|baslangic_sayfa;..."  li_devam portali icin
+#   GUN_<PORTAL>, BEKLE_* pencere ve bekleme sureleri (asagidaki varsayilanlar); TERIM_DOSYASI, KK_TERIM_DOSYASI
 #
 # Cikis kodu: 0 hepsi tamam | 3 en az bir istek/kombinasyon basarisiz | 4 en az bir portal BLOCKED
 #             | 2 kullanim hatasi | 6 on kosul (bun) yok
@@ -42,9 +43,11 @@ ILLER=("Ankara" "İstanbul")
 mapfile -t KK_TERIMLER < <(terim_oku "${KK_TERIM_DOSYASI:-config/tr_kk_terimler.txt}") || return 2
 [ ${#TERIMLER[@]} -gt 0 ] && [ ${#KK_TERIMLER[@]} -gt 0 ] || { echo "Terim listesi bos" >&2; return 2; }
 KK_SAYFA=20  # CLI istemci tarafinda 20 satirlik sayfa keser
-GUN_KK=15; GUN_KNET=15; GUN_LI=30; GUN_RG=16; GUN_ISKUR=15; GUN_VIT=30
+# Pencere (gun) ve bekleme (sn) varsayilanlari; ayni adli ortam degiskeniyle degisir (or. GUN_RG=2 pilot icin)
+GUN_KK=${GUN_KK:-15}; GUN_KNET=${GUN_KNET:-15}; GUN_LI=${GUN_LI:-30}; GUN_RG=${GUN_RG:-16}
+GUN_ISKUR=${GUN_ISKUR:-15}; GUN_VIT=${GUN_VIT:-30}
 VIT_SAYFA=50  # vacanciesinturkey: sayfa basina 50 kart; her acik ilanin sayfasi CLI icinde acilir
-BEKLE_KNET=20; BEKLE_LI=3; BEKLE_LI_HATA=15
+BEKLE_KNET=${BEKLE_KNET:-20}; BEKLE_LI=${BEKLE_LI:-3}; BEKLE_LI_HATA=${BEKLE_LI_HATA:-15}
 if [ "$KURU" = 1 ]; then BEKLE_KNET=0; BEKLE_LI=0; BEKLE_LI_HATA=0; fi
 
 slug() { echo "$1" | sed 's/ /_/g; s/ş/s/g; s/ı/i/g; s/İ/I/g; s/ç/c/g; s/ğ/g/g; s/ö/o/g; s/ü/u/g'; }
@@ -128,12 +131,18 @@ li|li_devam)
     DENENEN=$((DENENEN+1))
     while :; do
       f="$OUT/ham/li__$(slug "$t")__$(slug "$il")__p$pg.json"
-      ok=0
+      ok=0; basarisiz=0
       for dene in 1 2 3; do  # zaman asimi rastgele: 3 deneme
         kos "$f" $S/linkedin-search/cli/src/cli.ts search -q "$t" -l "$il, Türkiye" --jobage $GUN_LI --page $pg && { ok=1; break; }
-        sleep $BEKLE_LI_HATA
+        basarisiz=$((basarisiz+1)); sleep $BEKLE_LI_HATA
       done
-      [ $ok = 1 ] || { log "LI VAZGECILDI $t $il p$pg"; break; }
+      # Yeniden denemeyle kurtarilan istek hata sayilmaz (yoksa her taramada kod=3 olur); 3 deneme de
+      # basarisizsa tek hata sayilir.
+      if [ $ok = 1 ]; then
+        [ $basarisiz -gt 0 ] && { HATAN=$((HATAN-basarisiz)); log "LI KURTARILDI $t $il p$pg ($basarisiz basarisiz deneme)"; }
+      else
+        HATAN=$((HATAN-basarisiz+1)); log "LI VAZGECILDI $t $il p$pg"; break
+      fi
       c=$(grep -m1 '"count"' "$f" | tr -dc 0-9); sleep $BEKLE_LI
       # Dolu sayfadan sonra gelen bos sayfa liste sonu olmayabilir (inceleme 4, S5: research x Istanbul
       # yeniden bulma orani 0,18). Ayni sayfayi bir kez, sonra sonraki sayfayi bir kez dene.
