@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # TR portal taramasi: terim x il x donem. Ham JSON -> $OUT/ham/
 # Kullanim: bash tools/tr_tarama.sh <cikti_klasoru> <portal...>
-# Portal: kk | knet | li | li_devam | rg | iskur
+# Portal: kk | knet | li | li_devam | rg | iskur | vit
 #
 # Ortam degiskenleri:
 #   KURU=1        ag istegi yok: CLI cagrilmaz, bos JSON yazilir, plan loglanir
@@ -42,7 +42,8 @@ ILLER=("Ankara" "İstanbul")
 mapfile -t KK_TERIMLER < <(terim_oku "${KK_TERIM_DOSYASI:-config/tr_kk_terimler.txt}") || return 2
 [ ${#TERIMLER[@]} -gt 0 ] && [ ${#KK_TERIMLER[@]} -gt 0 ] || { echo "Terim listesi bos" >&2; return 2; }
 KK_SAYFA=20  # CLI istemci tarafinda 20 satirlik sayfa keser
-GUN_KK=15; GUN_KNET=15; GUN_LI=30; GUN_RG=16; GUN_ISKUR=15
+GUN_KK=15; GUN_KNET=15; GUN_LI=30; GUN_RG=16; GUN_ISKUR=15; GUN_VIT=30
+VIT_SAYFA=50  # vacanciesinturkey: sayfa basina 50 kart; her acik ilanin sayfasi CLI icinde acilir
 BEKLE_KNET=20; BEKLE_LI=3; BEKLE_LI_HATA=15
 if [ "$KURU" = 1 ]; then BEKLE_KNET=0; BEKLE_LI=0; BEKLE_LI_HATA=0; fi
 
@@ -174,6 +175,22 @@ iskur)
     done
   done; done
   portal_son iskur $(( ${#TERIMLER[@]} * ${#ILLER[@]} )) ;;
+vit)
+  # Vacancies in Turkey: il parametresi guvenilmez; Turkiye suzgeci (varsayilan: yurt disi 'no' atilir,
+  # 'unclear' kalir) ilan metnine bakar. --jobage kart yasina gore eski ilanin sayfasini acmaz.
+  for t in "${TERIMLER[@]}"; do
+    DENENEN=$((DENENEN+1)); pg=1
+    while :; do
+      f="$OUT/ham/vit__$(slug "$t")__TR__p$pg.json"
+      if ! kos "$f" $S/vacanciesinturkey-search/cli/src/cli.ts search -q "$t" --jobage $GUN_VIT --page $pg; then
+        grep -q BLOCKED "$f.err" && { BLOCKED=1; log "VIT BLOCKED: portal durduruldu"; break 2; }
+        break
+      fi
+      total=$(grep -m1 '"total"' "$f" | tr -dc 0-9)
+      [ $(( pg * VIT_SAYFA )) -lt "${total:-0}" ] || break; pg=$((pg+1))
+    done
+  done
+  portal_son vit ${#TERIMLER[@]} ;;
 *)
   log "BILINMEYEN PORTAL $P"; KOD=2 ;;
 esac

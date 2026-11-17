@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { fold, normalizeRef, parseJobCards, parseJobPosting, richText, turkeyVerdict } from "../src/helpers"
+import { fold, normalizeRef, parseJobCards, parseJobPosting, postedDays, richText, turkeyVerdict } from "../src/helpers"
 import { applyFilters, buildForm, parseTotal, type Result } from "../src/commands/search"
 
 // Synthetic fixtures shaped like the site's markup (2026-11-17); no third-party text.
@@ -70,6 +70,10 @@ describe("turkeyVerdict (cases measured on the live site, 2026-11-17)", () => {
     expect(turkeyVerdict("Commercial Director MEAP & Turkey CIS", "Location: Dubai, UAE. Covers Turkey.", "Dubai, United Arab Emirates").turkey).toBe("no"))
   test("'Çan, Turkey' site location counts as Canada when no Turkish city is named", () =>
     expect(turkeyVerdict("Staff Process Engineer", "Annual compensation package.", "Çan, Turkey").turkey).toBe("no"))
+  test("foreign market in title but Turkish duty station in text → unclear, not no (review 1, D1)", () =>
+    expect(turkeyVerdict("Regional Analyst, Germany & Benelux markets", "Duty station: Istanbul, Türkiye.", "İstanbul, Turkey").turkey).toBe("unclear"))
+  test("foreign market in title and only foreign places elsewhere → still no", () =>
+    expect(turkeyVerdict("Analyst, Benelux", "Amsterdam office.", "Van, Turkey").turkey).toBe("no"))
   test("a Turkish city in the text overrides a foreign site location", () =>
     expect(turkeyVerdict("Field Officer", "Duty station: Gaziantep, Türkiye.", "Dubai").turkey).toBe("yes"))
   test("fold handles dotted/dotless i", () => expect(fold("İSTANBUL Kadıköy")).toBe("istanbul kadikoy"))
@@ -93,6 +97,16 @@ describe("search helpers", () => {
   test("jobage drops older postings", () => {
     const old = new Date(Date.now() - 40 * 86_400_000).toISOString()
     expect(applyFilters([row("yes", old), row("yes", new Date().toISOString())], "default", 30).kept.length).toBe(1)
+  })
+})
+
+describe("postedDays", () => {
+  test("relative card ages", () => {
+    expect(postedDays("Posted 4 days ago")).toBe(4)
+    expect(postedDays("Posted 1 week ago")).toBe(7)
+    expect(postedDays("Posted 2 months ago")).toBe(60)
+    expect(postedDays("Posted 3 hours ago")).toBe(0)
+    expect(postedDays(null)).toBeNull()
   })
 })
 

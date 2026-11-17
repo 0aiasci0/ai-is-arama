@@ -38,7 +38,7 @@ Komutlar depo kökünden koşulur; `K=taramalar/<tarih>` tarama klasörüdür. H
 
 | Adım | Komut | Çıktı (`$K/` altında) |
 |---|---|---|
-| 1. Tarama | `bash tools/tr_tarama.sh $K kk knet li rg iskur` | `ham/*.json`, `tarama.log` (portal başına `PORTAL` satırı; çıkış kodu 3 = hata, 4 = engellendi). Önce `KURU=1` ile ağsız plan görülebilir |
+| 1. Tarama | `bash tools/tr_tarama.sh $K kk knet li rg iskur vit` | `ham/*.json`, `tarama.log` (portal başına `PORTAL` satırı; çıkış kodu 3 = hata, 4 = engellendi). Önce `KURU=1` ile ağsız plan görülebilir |
 | 2. Birleştir | `python tools/tr_birlestir.py $K <başlangıç YYYY-AA-GG>` | `ilanlar.csv` (betikler için, virgül ayraçlı), `ilanlar.xlsx` (göz atmak için; Türkçe Excel CSV'yi tek sütunda açar), `ilanlar.md`; `son_basvuru` sütunu (Kariyer Kapısı, İŞKUR), Kariyer.net tarihi ISO |
 | 3. Süz | `python tools/tr_baslik_suzgec.py $K` | `ilanlar_ilgili.csv` (kurallar `config/tr_suzgec.json`), `ilanlar_serbest.csv` |
 | 4. Resmî Gazete | `python tools/tr_rg_detay.py $K` ve `python tools/tr_rg_il.py $K` | `rg_akademik.json` (ilan metni, son başvuru, il; il tablosu `config/tr_rg_universite_il.json`) |

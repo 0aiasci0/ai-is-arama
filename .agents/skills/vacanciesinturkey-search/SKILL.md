@@ -40,6 +40,7 @@ full text (`turkeyVerdict` in `cli/src/helpers.ts`):
 |---|---|
 | Site location is abroad (or `Çan, Turkey`, which stood for Canada in 5 of 5 cases) and no Turkish city is named in title or text | `no` |
 | Title names Turkey or a Turkish city | `yes` |
+| Title names a foreign place, but a Turkish city appears in the text or site location | `unclear` |
 | Title names a foreign place only | `no` |
 | Text names Turkey only | `yes` |
 | Text names Turkey and foreign places; site city is Turkish | `yes` |
@@ -77,7 +78,7 @@ Key flags:
 - `--query <text>` / `-q` — **required.**
 - `--location <text>` / `-l` — site-side location filter (`Istanbul`, `Ankara`). Unreliable; the Turkey filter is what restricts results.
 - `--turkey default|strict|off` — `default` drops `no` and keeps `unclear`; `strict` keeps only `yes` (loses many Istanbul postings that name no place); `off` keeps all.
-- `--jobage <days>` — keep postings published within `<days>` (from JSON-LD `datePosted`).
+- `--jobage <days>` — keep postings published within `<days>` (from JSON-LD `datePosted`). Cards whose relative age ("Posted 2 months ago", a lower bound) already exceeds it are skipped before their pages are opened (pilot: `data analyst`, 26 records → 6 pages opened instead of 10).
 - `--include-expired` — the endpoint also returns expired postings (17 of 28 for `analyst`); they are skipped, and their pages are not opened, by default.
 - `--no-details` — do not open posting pages (no Turkey verdict, no description).
 - `--limit <n>` / `-n` — open at most `<n>` posting pages; applied **before** the Turkey filter, so fewer may remain.

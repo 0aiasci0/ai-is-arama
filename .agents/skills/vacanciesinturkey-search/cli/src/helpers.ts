@@ -159,6 +159,18 @@ export function parseJobCards(html: string): JobCard[] {
   return cards
 }
 
+/**
+ * Card age in days from "Posted 4 days ago" / "Posted 2 weeks ago" / "Posted 1 month ago" (lower bound:
+ * "1 month" = 30). null when unparseable. Used to skip old cards before opening their pages.
+ */
+export function postedDays(posted: string | null): number | null {
+  const m = (posted ?? "").match(/(\d+)\s+(minute|hour|day|week|month|year)s?\s+ago/i)
+  if (!m) return null
+  const n = Number(m[1])
+  const unit: Record<string, number> = { minute: 0, hour: 0, day: 1, week: 7, month: 30, year: 365 }
+  return n * unit[m[2].toLowerCase()]
+}
+
 // ---------- posting page (JSON-LD JobPosting) ----------
 
 export interface JobPosting {
@@ -299,7 +311,14 @@ export function turkeyVerdict(title: string, text: string | null, siteLocation: 
   const trCityNamed = [...ev.title.tr, ...ev.text.tr].some((t) => !COUNTRY_WORDS.has(t))
   if (ev.siteForeign.length && !trCityNamed) return r("no", "site location is abroad and no Turkish city is named")
   if (ev.title.tr.length) return r("yes", "title names a place in Turkey")
-  if (ev.title.foreign.length) return r("no", "title names a place outside Turkey")
+  if (ev.title.foreign.length) {
+    // A foreign market in the title can still be a Turkey-based job ("Regional Analyst, Germany & Benelux …
+    // Duty station: Istanbul"): a Turkish city in the text or site field makes it unclear, not no.
+    const trCityElsewhere = ev.text.tr.some((t) => !COUNTRY_WORDS.has(t)) || city
+    return trCityElsewhere
+      ? r("unclear", "title names a foreign place, but a Turkish city appears in the text or site location")
+      : r("no", "title names a place outside Turkey")
+  }
   const tr = ev.text.tr.length > 0
   const fx = ev.text.foreign.length > 0
   if (tr && !fx) return r("yes", "text names only places in Turkey")

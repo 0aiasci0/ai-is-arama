@@ -5,6 +5,7 @@ import {
   SITE_BASE,
   parseJobCards,
   parseJobPosting,
+  postedDays,
   siteFetch,
   sleep,
   turkeyVerdict,
@@ -106,6 +107,17 @@ export async function runSearch(opts: SearchOpts): Promise<number> {
     // skip them before any page is opened.
     const expired = cards.filter((c) => c.status === "expired").length
     if (!opts.includeExpired) cards = cards.filter((c) => c.status !== "expired")
+    // --jobage: skip cards whose relative age ("Posted 2 months ago", a lower bound) already exceeds it,
+    // so their pages are not opened; the exact datePosted check runs after the page is read.
+    let tooOldCard = 0
+    if (opts.jobage !== undefined) {
+      const limit = opts.jobage
+      cards = cards.filter((c) => {
+        const d = postedDays(c.posted)
+        if (d !== null && d > limit) return (tooOldCard++, false)
+        return true
+      })
+    }
     if (opts.limit !== undefined) cards = cards.slice(0, opts.limit)
 
     const rows: Result[] = []
@@ -158,7 +170,8 @@ export async function runSearch(opts: SearchOpts): Promise<number> {
       const pages = total !== null ? Math.max(1, Math.ceil(total / PER_PAGE)) : null
       const meta = {
         count: kept.length, total, page: opts.page, pages, checked: opts.details ? rows.filter((r) => r.turkey).length : 0,
-        dropped: { ...dropped, expired: opts.includeExpired ? 0 : expired }, turkeyMode: opts.turkey, blocked,
+        dropped: { ...dropped, tooOld: dropped.tooOld + tooOldCard, expired: opts.includeExpired ? 0 : expired },
+        turkeyMode: opts.turkey, blocked,
       }
       process.stdout.write(JSON.stringify({ meta, results: kept }, null, 2) + "\n")
     }

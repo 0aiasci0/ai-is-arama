@@ -17,8 +17,9 @@ import re
 import sys
 from collections import OrderedDict
 
-PORTAL = {"knet": "Kariyer.net", "li": "LinkedIn", "kk": "Kariyer Kapısı", "iskur": "İŞKUR"}
-DONEM_SUZULEN = {"li", "knet"}
+PORTAL = {"knet": "Kariyer.net", "li": "LinkedIn", "kk": "Kariyer Kapısı", "iskur": "İŞKUR",
+          "vit": "Vacancies in Turkey"}
+DONEM_SUZULEN = {"li", "knet", "vit"}
 ALANLAR = ["portal", "id", "baslik", "kurum", "konum", "tarih", "yas", "son_basvuru", "terimler", "il_aramasi", "url"]
 GORELI = re.compile(r"^\s*(\d+)\s*(gün|saat|dakika|hafta|ay)\b", re.I)
 GUN = {"gün": 1, "saat": 0, "dakika": 0, "hafta": 7, "ay": 30}
