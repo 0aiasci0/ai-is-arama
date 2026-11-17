@@ -94,17 +94,20 @@ def bicimle(ws, df, link_kol):
             c.font = Font(color="0563C1", underline="single")
 
 
-def tamamla(klasor, kayit, deger):
+def tamamla(klasor, kayit, son, deger):
     """Değerlendirilmiş ama kaynak CSV'de olmayan ilanları (ör. süzgeç kuralı sonradan değişti) ilanlar.csv'den alır."""
     eksik = [k for k in deger if k not in kayit]
     tum = os.path.join(klasor, TUM_ILANLAR)
     if eksik and os.path.isfile(tum):
         bul = set(eksik)
-        for r in csv.DictReader(open(tum, encoding="utf-8-sig")):
-            k = (r["portal"], r["id"])
-            if k in bul:
-                kayit[k] = {"Kaynak": r["portal"], "İlan": r["baslik"], "Kurum": r["kurum"], "Yer": r["konum"],
-                            "Yayın": r["tarih"], "Konum sınıfı": "(süzgeç dışı)", "Bağlantı": r["url"], "ID": r["id"]}
+        with open(tum, encoding="utf-8-sig") as fh:
+            for r in csv.DictReader(fh):
+                k = (r["portal"], r["id"])
+                if k in bul:
+                    kayit[k] = {"Kaynak": r["portal"], "İlan": r["baslik"], "Kurum": r["kurum"], "Yer": r["konum"],
+                                "Yayın": r["tarih"], "Konum sınıfı": "(süzgeç dışı)", "Bağlantı": r["url"], "ID": r["id"]}
+                    if r.get("son_basvuru") and k not in son:
+                        son[k] = r["son_basvuru"]
         alinan = sum(k in kayit for k in eksik)
         if alinan:
             print(f"UYARI: değerlendirilmiş {alinan} ilan kaynak CSV'de yok; {TUM_ILANLAR} dosyasından alındı "
@@ -192,7 +195,7 @@ def main(argv=None):
     kayit, son = oku(a.klasor, a.kaynak)
     deger = {tuple(k.split("|", 1)): v for k, v in json.load(open(a.deger, encoding="utf-8")).items()
              if not k.startswith("_")}
-    tamamla(a.klasor, kayit, deger)
+    tamamla(a.klasor, kayit, son, deger)
     df_deg, df_tum = tablolar(kayit, son, deger)
 
     cikti = a.cikti or os.path.join(a.klasor, f"cv_uyum_{dt.date.today().isoformat()}.xlsx")
