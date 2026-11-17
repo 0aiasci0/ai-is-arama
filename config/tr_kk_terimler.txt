@@ -1,0 +1,7 @@
+# Kariyer Kapısı tam metin arama terimleri (tools/tr_tarama.sh, kk dalı).
+# Kamu ilan başlığında rol adı geçmez; ilan metnindeki bölüm şartı aranır.
+# Satır başına bir terim; # ile başlayan ve boş satırlar okunmaz.
+iktisat
+istatistik
+ekonomi
+ekonometri

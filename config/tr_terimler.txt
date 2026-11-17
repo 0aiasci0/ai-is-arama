@@ -1,0 +1,19 @@
+# tools/tr_tarama.sh arama terimleri: Kariyer.net, LinkedIn, İŞKUR (terim x il).
+# Satır başına bir terim; # ile başlayan ve boş satırlar okunmaz.
+# Her terim portal başına il sayısı kadar sorgu ekler (LinkedIn'de il başına 100 sayfaya kadar).
+# Kariyer.net bot korumalıdır (~40 istek/saatte 403 gözlendi): listeyi uzatırken bunu göz önüne alın.
+ekonomist
+araştırmacı
+economist
+research
+veri analisti
+data analyst
+data scientist
+# 2026-10-23 taramasında kullanılıp sonra düşen terimler (inceleme 2, B1)
+policy analyst
+politika analisti
+trade analyst
+climate policy
+development consultant
+research economist
+sürdürülebilirlik uzmanı

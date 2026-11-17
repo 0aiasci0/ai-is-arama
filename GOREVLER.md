@@ -18,6 +18,7 @@ Repo: yerel private klon, `upstream` = MadsLorentzen/ai-job-search. Yalnız yeni
 | 1 | Depo gizli + kişisel klasörler gitignore | bitti | `gh repo view` PRIVATE; 4/4 kişisel dosya check-ignore; commit 4b61b41 |
 | 2 | CI `main` dalında | bitti | Actions koşusu 44148862302: Python 5/5, TR CLI 6/6 başarılı; Danimarka CLI 4/4 başarısız (ayrı iş) |
 | 3 | tr_tarama.sh: main(), PORTAL satırı, çıkış kodu, KURU | bitti | Ağsız sınama: KURU kod=0, sahte BLOCKED kod=4, sahte hata kod=3, koşu ortası Edit exit 0; #17 #18 KAPANDI; commit 822a813 |
+| 5 | LinkedIn boş sayfa yeniden deneme; terimler config/ altında, 23 Ekim terimleri geri | bitti | Sahte CLI: boş p3 sonrası p4 dolu → sürdü; yeniden denemede dolu → sürdü; normal son → durdu. Terim 7 → 14 (knet/li/iskur kombinasyon 14 → 28); liste sonu başına +2 LinkedIn isteği |
 | 4 | Kariyer Kapısı: bölüm terimleri + detaydan il | bitti | Canlı pilot 16 istek: 12 ilan, 9 ilgili (önce 0); altın küme 5/5 Ankara ilanı (KİK, SGK, KDK, NDK, Sayıştay); eski veride çıktı bayt aynı |
 
 ## 2026-11-17 eklemeleri

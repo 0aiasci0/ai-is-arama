@@ -28,12 +28,19 @@ BUN="${BUN:-bun}"
 mkdir -p "$OUT/ham"
 LOG="$OUT/tarama.log"
 
-TERIMLER=("ekonomist" "araştırmacı" "economist" "research" "veri analisti" "data analyst" "data scientist")
+# Terimler config/ altindan okunur (satir basina bir terim; # ve bos satir atlanir).
+# TERIM_DOSYASI / KK_TERIM_DOSYASI ile baska dosya verilebilir.
+terim_oku() {  # terim_oku <dosya> -> satirlar
+  [ -f "$1" ] || { echo "Terim dosyasi yok: $1" >&2; return 1; }
+  sed -e 's/\r$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' "$1" | grep -v -e '^#' -e '^$'
+}
+mapfile -t TERIMLER < <(terim_oku "${TERIM_DOSYASI:-config/tr_terimler.txt}") || return 2
 ILLER=("Ankara" "İstanbul")
 # Kariyer Kapisi: kamu ilanlari kurum duyurusu; basliklarda rol adi yok, metinde bolum sarti var
 # ("iktisat", "istatistik"). Rol terimleriyle 21/21 sorgu 0 dondu (2026-11-16). Tam metin aranir,
 # il API'de degil alt ilanlarin kontenjan listesinde: her ilanin detayi ayrica cekilir.
-KK_TERIMLER=("iktisat" "istatistik" "ekonomi" "ekonometri")
+mapfile -t KK_TERIMLER < <(terim_oku "${KK_TERIM_DOSYASI:-config/tr_kk_terimler.txt}") || return 2
+[ ${#TERIMLER[@]} -gt 0 ] && [ ${#KK_TERIMLER[@]} -gt 0 ] || { echo "Terim listesi bos" >&2; return 2; }
 KK_SAYFA=20  # CLI istemci tarafinda 20 satirlik sayfa keser
 GUN_KK=15; GUN_KNET=15; GUN_LI=30; GUN_RG=16; GUN_ISKUR=15
 BEKLE_KNET=20; BEKLE_LI=3; BEKLE_LI_HATA=15
@@ -127,6 +134,22 @@ li|li_devam)
       done
       [ $ok = 1 ] || { log "LI VAZGECILDI $t $il p$pg"; break; }
       c=$(grep -m1 '"count"' "$f" | tr -dc 0-9); sleep $BEKLE_LI
+      # Dolu sayfadan sonra gelen bos sayfa liste sonu olmayabilir (inceleme 4, S5: research x Istanbul
+      # yeniden bulma orani 0,18). Ayni sayfayi bir kez, sonra sonraki sayfayi bir kez dene.
+      if [ "${c:-0}" = 0 ] && [ "$pg" -gt 1 ]; then
+        sleep $BEKLE_LI_HATA
+        kos "$f" $S/linkedin-search/cli/src/cli.ts search -q "$t" -l "$il, Türkiye" --jobage $GUN_LI --page $pg \
+          && c=$(grep -m1 '"count"' "$f" | tr -dc 0-9)
+        if [ "${c:-0}" = 0 ]; then
+          f2="$OUT/ham/li__$(slug "$t")__$(slug "$il")__p$((pg+1)).json"
+          kos "$f2" $S/linkedin-search/cli/src/cli.ts search -q "$t" -l "$il, Türkiye" --jobage $GUN_LI --page $((pg+1)) \
+            && c2=$(grep -m1 '"count"' "$f2" | tr -dc 0-9) || c2=0
+          if [ "${c2:-0}" -gt 0 ]; then log "LI BOS SAYFA $t $il p$pg (p$((pg+1)) dolu, surduruluyor)"; pg=$((pg+1)); c=$c2
+          else break; fi
+        else
+          log "LI BOS SAYFA $t $il p$pg (yeniden denemede dolu)"
+        fi
+      fi
       [ "${c:-0}" -ge 10 ] || break; pg=$((pg+1))
     done
   done
