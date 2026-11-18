@@ -47,6 +47,8 @@ Komut şu adımları yürütür ve her onay noktasında durur:
 
 `profiller/` ve `taramalar/` kişisel veridir. `.gitignore` ile depoya girmez.
 
+**Süre:** İlk tur uzun sürebilir. Örnek ölçüm: 14 terim × 3 il, 6 kaynak, yaklaşık 3 saat; sürenin çoğu LinkedIn'de geçer. Sonrasında günlük güncelleme daha hızlıdır: daha önce değerlendirilen ilanlar kuyruğa girmez, tarama penceresi de kısaltılabilir (örnek: `GUN_LI=2 GUN_KNET=3 GUN_KK=3 GUN_ISKUR=3 GUN_VIT=3`).
+
 ## Adım adım komutlar
 
 Komutlar depo kökünden koşulur. `K=taramalar/<kişi>/<tarih>`, `P=profiller/<kişi>`.
