@@ -114,6 +114,19 @@ class Birlestir(unittest.TestCase):
         ids = [r[1] for r in ws.iter_rows(min_row=2, values_only=True)]
         self.assertIn("00009894423", ids, "xlsx'te id metin kalmalı (baştaki sıfırlar)")
 
+    def test_donemsiz_portal_suzulmez(self):
+        # önceki taramada olmayan portal (vit) için eski tarihli açık ilan atılmamalı; li süzgeci sürer
+        json_yaz(os.path.join(self.d, "ham", "vit__research__TR__p1.json"), sonuc(
+            {"id": "v1", "title": "Research Officer", "company": "UN", "location": "Ankara", "date": "2026-10-01",
+             "deadline": "2027-01-22", "url": "u6"}))
+        k = kos("tr_birlestir.py", self.d, "2026-11-02", "--donemsiz", "vit", "--xlsx-yok")
+        self.assertEqual(k.returncode, 0, k.stderr)
+        rows = {r["id"]: r for r in csv_oku(os.path.join(self.d, "ilanlar.csv"))}
+        self.assertIn("v1", rows)
+        self.assertNotIn("3", rows, "li dönem süzgeci sürmeli")
+        k = kos("tr_birlestir.py", self.d, "2026-11-02", "--xlsx-yok")
+        self.assertNotIn("v1", {r["id"] for r in csv_oku(os.path.join(self.d, "ilanlar.csv"))})
+
     def test_hatali_tarih_reddedilir(self):
         k = kos("tr_birlestir.py", self.d, "02.11.2026")
         self.assertNotEqual(k.returncode, 0)

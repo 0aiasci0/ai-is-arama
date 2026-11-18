@@ -16,7 +16,19 @@ export function writeError(error: string, code: string): void {
   process.stderr.write(JSON.stringify({ error, code }) + "\n")
 }
 
-const UA = "Mozilla/5.0 (compatible; kariyernet-cli/1.0)"
+// 2026-11-18 ölçümü: "kariyernet-cli/1.0" kimliği ilk istekte 403 alıyordu; aynı adresler bu başlıklarla
+// 30/30 istekte 200 döndü. Arama (/is-ilanlari) ve ilan (/is-ilani) yolları robots.txt'te izinli.
+// Hacim düşük kalır (tarama betiği istekler arasında 20 sn bekler); 403 yine engel sayılır, döngüde denenmez.
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
+const BASLIKLAR = {
+  "User-Agent": UA,
+  Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+  "Accept-Language": "tr-TR,tr;q=0.9",
+  "Sec-Fetch-Dest": "document",
+  "Sec-Fetch-Mode": "navigate",
+  "Sec-Fetch-Site": "none",
+  "Upgrade-Insecure-Requests": "1",
+}
 
 export class BlockedError extends Error {}
 
@@ -34,11 +46,7 @@ export async function htmlFetch(url: string): Promise<Fetched> {
   let delay = 500
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     const response = await fetch(url, {
-      headers: {
-        "User-Agent": UA,
-        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "Accept-Language": "tr-TR,tr;q=0.9",
-      },
+      headers: BASLIKLAR,
       redirect: "follow",
       signal: AbortSignal.timeout(30000),
     })

@@ -122,12 +122,7 @@ company_research/*.json
 
 # Türkiye uyarlaması: kişisel çıktı (tarama sonuçları, CV değerlendirmesi, oturum kayıtları) - asla commit etme
 taramalar/
-.claude/skills/job-scraper/job_scraper/kisi_*/
-.claude/skills/job-scraper/job_scraper/*.xlsx
-.claude/skills/job-scraper/job_scraper/*.json
-.claude/skills/job-scraper/job_scraper/*.sh
-.claude/skills/job-scraper/job_scraper/*.py
-.claude/skills/job-scraper/job_scraper/kisi_*/
+.claude/skills/job-scraper/job_scraper/
 .claude/governance/
 
 # Yerel arşiv (silinmeyen eski dosyalar) - depoya girmez

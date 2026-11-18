@@ -42,13 +42,7 @@ Read the evaluation framework:
 - `.claude/skills/job-application-assistant/04-job-evaluation.md`
 - `.claude/skills/job-application-assistant/01-candidate-profile.md`
 
-Using the framework from `04-job-evaluation.md`, evaluate the job posting against the candidate's profile. If the salary lookup tool is configured, run:
-
-```bash
-python salary_lookup.py "<Company Name>" --json
-```
-
-If the posting specifies a city, add `--city "<City>"` to narrow results. Parse the JSON output and include the salary benchmark in the evaluation. If the tool is not configured or returns an error, skip the salary benchmark.
+Using the framework from `04-job-evaluation.md`, evaluate the job posting against the candidate's profile. The Turkey edition has no salary lookup tool; skip the salary benchmark unless the posting states a salary.
 
 ### Source Host Verification (when input is a URL)
 

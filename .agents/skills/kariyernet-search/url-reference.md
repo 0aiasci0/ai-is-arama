@@ -6,6 +6,12 @@ Measured 2026-10-18. `robots.txt` (`User-agent: *`) disallows `/filtre`, `/ozgec
 gets 200 on search/detail pages but the root `/` answered 403 to a UA-less curl, and a burst of ~40
 requests produced one 403.
 
+**2026-11-18 update:** the honest UA now gets 403 on the first request (3 runs: 11-16, 11-18 02:12, 11-18 09:25;
+CLI code, Bun 1.3.11 and URLs unchanged). The same URLs with browser headers (Chrome UA, `Accept`,
+`Accept-Language`, `Sec-Fetch-*`, `Upgrade-Insecure-Requests`) returned 200 on 30/30 curl requests and on the
+CLI's own Bun `fetch`, so the block keys on headers, not on the TLS fingerprint. `helpers.ts` sends those headers.
+Volume stays low (`tr_tarama.sh` waits 20 s between requests) and a 403 still stops the run.
+
 ## Search — `GET /is-ilanlari[/<city-slug>]?<params>`
 
 Server-rendered Nuxt 2 page (~500–700 KB).

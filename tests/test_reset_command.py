@@ -239,15 +239,17 @@ class TestResetTargetsTheHeadingsTheShippedFilesHave(unittest.TestCase):
 
     def test_full_file_skeletons_keep_the_framework_version_frontmatter(self):
         # The shipped files open with a `framework_version` marker that
-        # check_framework_version.py requires and check_upstream_updates.py
-        # reads. The skeletons started at the `#` title, so one /reset profile
+        # check_framework_version.py requires and reads. The skeletons started at the `#` title, so one /reset profile
         # left both files failing the version gate ("missing 'framework_version'
         # in frontmatter") and invisible to the fork update checker. The
         # instruction must say to keep the block, and the block must not be
         # hardcoded into the skeleton, where it would go stale on the next bump.
         import sys
         sys.path.insert(0, str(REPO / "tools"))
-        from check_upstream_updates import get_framework_version_from_text
+        from check_framework_version import parse_frontmatter_text
+
+        def get_framework_version_from_text(text):
+            return parse_frontmatter_text(text).get("framework_version")
 
         for filename in ("01-candidate-profile.md", "02-behavioral-profile.md"):
             with self.subTest(file=filename):

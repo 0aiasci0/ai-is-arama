@@ -48,7 +48,10 @@ def main(argv=None):
     ap.add_argument("klasor")
     ap.add_argument("baslangic", help="YYYY-AA-GG")
     ap.add_argument("--xlsx-yok", action="store_true", help="ilanlar.xlsx yazma")
+    ap.add_argument("--donemsiz", nargs="*", default=[], choices=sorted(DONEM_SUZULEN),
+                    help="dönem süzgecinden muaf portallar (or. önceki taramada olmayan 'vit')")
     a = ap.parse_args(argv)
+    donemli = DONEM_SUZULEN - set(a.donemsiz)
     if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", a.baslangic):
         sys.exit(f"HATA: başlangıç tarihi YYYY-AA-GG olmalı, gelen: {a.baslangic}")
     OUT, BAS = a.klasor, a.baslangic
@@ -74,7 +77,7 @@ def main(argv=None):
             tarih = ham_tarih
             if ad[0] == "knet":
                 yas, tarih = ham_tarih, (iso_tarih(ham_tarih, tarama_gunu) or ham_tarih)
-            if ad[0] in DONEM_SUZULEN and re.match(r"\d{4}-\d{2}-\d{2}", tarih) and tarih[:10] < BAS:
+            if ad[0] in donemli and re.match(r"\d{4}-\d{2}-\d{2}", tarih) and tarih[:10] < BAS:
                 continue
             k = (ad[0], r["id"])
             if k not in ilan:

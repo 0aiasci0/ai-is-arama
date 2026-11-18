@@ -45,8 +45,6 @@ ALLOWED_PERMISSIONS = {
     # A portal added by /add-portal needs its own entry here and in
     # .claude/settings.json - that review step is the point.
     "Bash(bun run .agents/skills/linkedin-search/cli/src/cli.ts:*)",
-    "Bash(python salary_lookup.py:*)",
-    "Bash(python3 salary_lookup.py:*)",
     "Bash(python tools/rank_state.py:*)",
     "Bash(python3 tools/rank_state.py:*)",
     "Bash(python tools/job_key.py:*)",

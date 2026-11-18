@@ -44,7 +44,7 @@ Reviews here are empirical. Bug reports are reproduced on master before the fix 
 
 1. Fork the repo and run `/add-portal` with your local job board - it scaffolds a portal skill matching the shipped contract, and `/scrape` picks it up automatically.
 2. Announce your fork in the pinned [Community forks & adaptations](https://github.com/MadsLorentzen/ai-job-search/discussions/78) discussion so others can find it.
-3. Run the framework update checker (`python3 tools/check_upstream_updates.py`) in your fork to check if upstream has updated any framework files and compare them with your personalized variants.
+3. Compare upstream's framework files with your personalized variants (`git diff HEAD upstream/master -- .claude/skills`); the Turkey edition archived the upstream update checker.
 
 Market-specific skills are genuinely valuable - they just live in forks, where their maintainers can test them and their users can find them.
 
@@ -58,7 +58,7 @@ What upstream maintains for other runtimes instead:
 
 - The portal search skills in `.agents/skills/` use the portable Agent Skills format (`SKILL.md` per portal) and are auto-discovered by Codex and Antigravity today.
 - The root `AGENTS.md` points any agent at the canonical workflow specs and the profile entry point.
-- Framework instruction files carry `framework_version` markers, so a runtime fork can track methodology changes precisely (`python3 tools/check_upstream_updates.py`).
+- Framework instruction files carry `framework_version` markers, so a runtime fork can track methodology changes precisely.
 
 Announce your runtime fork in the pinned [Community forks & adaptations](https://github.com/MadsLorentzen/ai-job-search/discussions/78) discussion and it gets listed alongside the market adaptations. The proven shape is a thin pointer: reference the specs here instead of copying them, so upstream improvements reach your fork on rebase.
 

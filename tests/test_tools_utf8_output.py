@@ -91,17 +91,6 @@ class ToolsWriteUtf8(unittest.TestCase):
         self.assertNotIn(b"UnicodeEncodeError", proc.stderr)
         self.assertIn(CYRILLIC, proc.stdout.decode("utf-8"))
 
-    def test_salary_lookup_prints_a_company_outside_cp1252(self):
-        shutil.copy(REPO / "salary_lookup.py", self.tmp / "salary_lookup.py")
-        (self.tmp / "salary_data.json").write_text(json.dumps({
-            "metadata": {"source": "fixture", "index_baseline": 100, "index_label": "Index",
-                         "baseline_description": "Index 100 = baseline"},
-            "companies": [{"company": POLISH, "city": "Łódź",
-                           "categories": {"all_employees": {"count": 50, "index": 104.0}}}],
-        }, ensure_ascii=False), encoding="utf-8")
-        proc = run_legacy_stdout([self.tmp / "salary_lookup.py", "Żabka"], cwd=self.tmp)
-        self.assert_clean_utf8(proc, 0, POLISH)
-
     def test_verify_pdf_names_a_non_latin_file_in_its_error(self):
         missing = self.tmp / f"main_{CJK}_engineer.pdf"
         proc = run_legacy_stdout([TOOLS / "verify_pdf.py", missing])
@@ -132,44 +121,6 @@ class ToolsWriteUtf8(unittest.TestCase):
         proc = run_legacy_stdout([driver])
         self.assertNotIn(b"UnicodeEncodeError", proc.stderr)
         self.assertIn(POLISH, proc.stdout.decode("utf-8"))
-
-    @unittest.skipUnless(openpyxl, "requires optional openpyxl (installed in CI)")
-    def test_salary_converter_names_a_non_latin_worksheet(self):
-        workbook = self.tmp / "salary.xlsx"
-        book = openpyxl.Workbook()
-        try:
-            book.active.title = CYRILLIC
-            book.active.append(["Company", "City", "Count", "Index"])
-            book.active.append([CYRILLIC, "Москва", 40, 101.5])
-            book.save(workbook)
-        finally:
-            book.close()
-        proc = run_legacy_stdout([
-            TOOLS / "convert_salary_excel.py", workbook, "--output", self.tmp / "out.json",
-        ])
-        self.assert_clean_utf8(proc, 0, CYRILLIC)
-
-    def test_upstream_triage_handles_non_latin_commit_subjects(self):
-        repo = self.tmp / "repo"
-        repo.mkdir()
-        tools_dir = repo / "tools"
-        tools_dir.mkdir()
-        shutil.copy(TOOLS / "upstream_triage.py", tools_dir / "upstream_triage.py")
-        subprocess.run(["git", "init", "-b", "master"], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.name", "Test"], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "config", "user.email", "test@example.com"], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "remote", "add", "upstream", "https://github.com/MadsLorentzen/ai-job-search.git"], cwd=repo, check=True, capture_output=True)
-        (repo / "file.txt").write_text("hello\n", encoding="utf-8")
-        subprocess.run(["git", "add", "file.txt"], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "commit", "-m", "init"], cwd=repo, check=True, capture_output=True)
-        (repo / "file.txt").write_text("change\n", encoding="utf-8")
-        subprocess.run(["git", "add", "file.txt"], cwd=repo, check=True, capture_output=True)
-        msg = f"feat: add support for {CYRILLIC}"
-        subprocess.run(["git", "commit", "-m", msg], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "update-ref", "refs/remotes/upstream/master", "HEAD"], cwd=repo, check=True, capture_output=True)
-        subprocess.run(["git", "reset", "--hard", "HEAD~1"], cwd=repo, check=True, capture_output=True)
-        proc = run_legacy_stdout([repo / "tools" / "upstream_triage.py"], cwd=repo)
-        self.assert_clean_utf8(proc, 0, CYRILLIC)
 
 
 if __name__ == "__main__":

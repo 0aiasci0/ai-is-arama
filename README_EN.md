@@ -203,19 +203,14 @@ ai-job-search/
 │   ├── references/                    # Reference letters
 │   └── applications/                  # Past application records (<company>_<role>/)
 ├── .github/workflows/ci.yml           # CI: LaTeX smoke compiles, skill lint, CLI typechecks
-├── salary_lookup.py                   # Salary benchmarking tool (BYO data)
 ├── tools/
 │   ├── check_framework_version.py     # CI check: framework_version bumped when skill files change
-│   ├── check_upstream_updates.py      # Preview which personalized files an upstream update touches
-│   ├── convert_salary_excel.py        # Convert salary Excel to JSON
 │   ├── install_portal_clis.py         # Install every discovered portal CLI (bun install)
 │   ├── lint_skills.py                 # CI lint for skills, commands, settings.json
 │   ├── robots_check.py                # Gate the browser-header retry against robots.txt
 │   ├── security_guards.py             # CI guards: permission allowlist, gitignore rules, manifests
-│   ├── upstream_triage.py             # Sort upstream commits into worth-reviewing vs probably-skip
 │   ├── verify_layout.py               # Measure a compiled PDF's page layout (holes, orphans, footer collisions)
-│   ├── verify_pdf.py                  # Verify a compiled PDF's page count and extractable text
-│   └── README_SALARY_TOOL.md          # Salary tool setup instructions
+│   └── verify_pdf.py                  # Verify a compiled PDF's page count and extractable text
 ├── job_scraper/                       # Scraper state (seen jobs, results)
 ├── gmail_sync/                        # /gmail-sync state (processed message IDs, last sync date)
 ├── upskill/                           # /upskill report output (markdown reports per run)
@@ -327,7 +322,7 @@ Market-specific *data sources* (a national salary database, local award-rate tab
 
 ### Salary benchmarking
 
-The salary tool works with any salary data you provide (union statistics, Glassdoor exports, personal research, etc.). See `tools/README_SALARY_TOOL.md` for the expected format and setup. If you don't have salary data, the salary step is simply skipped.
+The Turkey edition does not ship the upstream salary tool (archived 2026-11-18); the salary step is skipped.
 
 ### Starting over
 

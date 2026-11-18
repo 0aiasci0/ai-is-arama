@@ -251,16 +251,7 @@ The `--section search` option is especially useful as your priorities evolve. It
 
 ## 5. Optional: Set up salary benchmarking
 
-If you have salary data (from a union, salary survey, Glassdoor, or personal research):
-
-1. **Option A:** Create `salary_data.json` manually in the repo root (see `tools/README_SALARY_TOOL.md` for the format)
-2. **Option B:** Convert from Excel:
-   ```bash
-   pip install openpyxl
-   python3 tools/convert_salary_excel.py path/to/salary-data.xlsx --source "My Salary Data 2025"
-   ```
-
-This creates `salary_data.json` which the `/apply` workflow uses for salary benchmarking. If you skip this step, salary lookup is simply omitted.
+The Turkey edition ships no salary tool: the upstream salary lookup and Excel converter were archived on 2026-11-18. `/apply` skips the salary benchmark unless the posting states a salary.
 
 ## 6. Test the workflow
 
@@ -312,19 +303,9 @@ Upstream keeps improving the methodology files your fork has personalized, so pl
    ```bash
    git remote add upstream https://github.com/MadsLorentzen/ai-job-search.git   # first time only, if you cloned your own fork
    git fetch upstream    # or origin, if you cloned the template directly
-   python3 tools/check_upstream_updates.py
+   git diff HEAD upstream/master --stat -- .claude/skills .claude/commands
    ```
-   It compares the `framework_version` markers in your framework files against upstream and lists exactly which methodology files changed, with the diff command for each.
-
-   Two tools answer two different questions, and it's worth running both:
-   - **`check_upstream_updates.py`** — *which of my personalized files changed?* It reads the `framework_version` stamp on each methodology file, so it flags exactly the customized files a release touched.
-   - **`upstream_triage.py`** — *which upstream commits deserve my attention?* It walks the commits you're behind and sorts them into "worth reviewing" vs "probably skip", dropping anything you've already cherry-picked (matched by `git patch-id`, so ported work falls off with no bookkeeping), commits that only touch files your fork removed, and SHAs you've listed in `.github/upstream-wontport.txt`. It's report-only — it prints ready-to-run `git cherry-pick` lines but never merges, pushes, or opens a PR, because on a fork "applies cleanly" isn't "correct".
-
-     ```bash
-     python3 tools/upstream_triage.py --remote upstream
-     ```
-
-     Forks also inherit a `.github/workflows/upstream-watch.yml` that runs this weekly and writes the result into a single rolling issue (it no-ops on the upstream template itself, and stays disabled on a fork until you enable Actions).
+   The Turkey edition archived the upstream sync helpers (`check_upstream_updates.py`, `upstream_triage.py`, `upstream-watch.yml`) on 2026-11-18; compare the `framework_version` markers in the diff by hand.
 3. **Merge normally.** `git merge upstream/master` (or `git pull`) three-way-merges upstream's edits around your personalization; because methodology edits rarely touch the lines `/setup` filled in, most updates land cleanly. A conflict in a personalized file is a *feature*, not a failure — it means upstream changed methodology in a section you customized, and the version marker plus its changelog commit tell you why. Resolve by keeping your data and adopting the methodology change around it.
 
 ## Troubleshooting
@@ -344,7 +325,7 @@ Make sure Bun is installed and you ran `bun install` in each CLI directory. The 
 The cover letter template expects fonts in `cover_letters/OpenFonts/fonts/`. Make sure this directory exists and contains the Lato and Raleway font files.
 
 ### Stale `.claude/settings.local.json` from an older clone
-Shared Claude Code permissions now live in `.claude/settings.json` (scoped to `bun run`, `python salary_lookup.py`, and `python3 salary_lookup.py`). Earlier versions of this repo committed a broader `.claude/settings.local.json` that pre-approved `Bash(curl:*)`, `Bash(python:*)` and `Bash(bun:*)`. If you cloned before that change, git leaves the old file behind in your working copy, and its permissions still apply on top of `settings.json`. Delete it (or trim it to your own personal overrides):
+Shared Claude Code permissions now live in `.claude/settings.json` (scoped to the shipped portal CLIs and the repo's own Python tools). Earlier versions of this repo committed a broader `.claude/settings.local.json` that pre-approved `Bash(curl:*)`, `Bash(python:*)` and `Bash(bun:*)`. If you cloned before that change, git leaves the old file behind in your working copy, and its permissions still apply on top of `settings.json`. Delete it (or trim it to your own personal overrides):
 
 ```bash
 rm .claude/settings.local.json
